@@ -94,3 +94,5 @@ public enum WebAuthError: CustomNSError {
         }
     }
 }
+
+extension WebAuthError: LocalizedError {}

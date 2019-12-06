@@ -47,7 +47,9 @@ class SafariSessionSpec: QuickSpec {
         var result: Result<Credentials>? = nil
         let callback: (Result<Credentials>) -> () = { result = $0 }
         let controller = MockSafariViewController(url: URL(string: "https://auth0.com")!)
-        let handler = ImplicitGrant()
+        let domain = URL.a0_url("samples.auth0.com")
+        let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
+        let handler = ImplicitGrant(authentication: authentication)
         let session = SafariSession(controller: controller, redirectURL: RedirectURL, handler: handler, finish: callback, logger: nil)
 
         beforeEach {
@@ -87,8 +89,8 @@ class SafariSessionSpec: QuickSpec {
             }
 
             context("response_type=token") {
-
-                let session = SafariSession(controller: controller, redirectURL: RedirectURL, handler: ImplicitGrant() , finish: callback, logger: nil)
+                
+                let session = SafariSession(controller: controller, redirectURL: RedirectURL, handler: handler, finish: callback, logger: nil)
 
                 it("should not return credentials from query string") {
                     let _ = session.resume(URL(string: "https://samples.auth0.com/callback?access_token=ATOKEN&token_type=bearer")!)
@@ -117,10 +119,14 @@ class SafariSessionSpec: QuickSpec {
                 let generator = A0SHA256ChallengeGenerator()
                 let session = SafariSession(controller: controller, redirectURL: RedirectURL, handler: PKCE(authentication: Auth0Authentication(clientId: ClientId, url: Domain), redirectURL: RedirectURL, generator: generator, reponseType: [.code]), finish: callback, logger: nil)
                 let code = "123456"
+                let domain = "samples.auth0.com"
 
                 beforeEach {
-                    stub(condition: isToken("samples.auth0.com") && hasAtLeast(["code": code, "code_verifier": generator.verifier, "grant_type": "authorization_code", "redirect_uri": RedirectURL.absoluteString])) { _ in return authResponse(accessToken: "AT", idToken: "IDT") }.name = "Code Exchange Auth"
-
+                    stub(condition: isToken(domain) && hasAtLeast(["code": code, "code_verifier": generator.verifier, "grant_type": "authorization_code", "redirect_uri": RedirectURL.absoluteString])) {
+                        _ in return authResponse(accessToken: "AT",
+                                                 idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc1NjYwNDg5LCJpYXQiOjE1NzU0ODc2ODksIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NTU3NDA4OX0.Qg8r0v6cZZaZPQ1PIv6sWYCURix3zm3E5IUnlhNy_QguW_gm_FBk_DNR7AUMdwSQqWurar3yYhvCleEQVZ1sTlN33vM_xCelPf5D0vQt6VmS0o8UCV6lJV4KfVfHK8S1QeV1VVRhJz1PbT0yC0DnX0yBHE6WXWSW4d9FUYdEplC3jZZl_xVMkG7w3mKNwK3wXnYduCn8lkh88tvdK5ZUP8VqPdAOFmr_oy8_eRthsmOaoP0C6w9ayApPu4Ty9BZnIRX3T09CgD2XqM4vCfc2T_UygLhLXE6d9YoX-F3DmujFCFqmha1f4Tx_ISTbn1VlhQLz5ZPYer9ZaPIk-zRx3g")
+                    }.name = "Code Exchange Auth"
+                    stub(condition: isJWKSPath(domain)) { _ in jwksRS256() }.name = "RS256 JWK"
                 }
 
                 afterEach {

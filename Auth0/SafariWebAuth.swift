@@ -196,12 +196,12 @@ class SafariWebAuth: WebAuth {
     }
 
     func handler(_ redirectURL: URL) -> OAuth2Grant {
-        if self.responseType.contains([.code]) {
-            var authentication = Auth0Authentication(clientId: self.clientId, url: self.url, telemetry: self.telemetry)
+        var authentication = Auth0Authentication(clientId: self.clientId, url: self.url, telemetry: self.telemetry)
+        if self.responseType.contains([.code]) { // both Hybrid and Code flow
             authentication.logger = self.logger
             return PKCE(authentication: authentication, redirectURL: redirectURL, reponseType: self.responseType, nonce: self.nonce)
         } else {
-            return ImplicitGrant(responseType: self.responseType, nonce: self.nonce)
+            return ImplicitGrant(authentication: authentication, responseType: self.responseType, nonce: self.nonce)
         }
     }
 

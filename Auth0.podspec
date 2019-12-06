@@ -53,7 +53,7 @@ Pod::Spec.new do |s|
   s.source           = { :git => 'https://github.com/auth0/Auth0.swift.git', :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/auth0'
 
-  s.ios.deployment_target = '9.0'
+  s.ios.deployment_target = '10.0'
   s.osx.deployment_target = '10.11'
   s.watchos.deployment_target = '2.0'
   s.tvos.deployment_target = '9.0'
@@ -63,14 +63,17 @@ Pod::Spec.new do |s|
   s.ios.frameworks = 'UIKit', 'SafariServices', 'LocalAuthentication'
   s.ios.weak_framework = 'AuthenticationServices'
   s.ios.dependency 'SimpleKeychain'
+  s.ios.dependency 'JWTDecode'
   s.osx.source_files = 'Auth0/*.swift'
   s.osx.exclude_files = web_auth_files
   s.osx.dependency 'SimpleKeychain'
+  s.osx.dependency 'JWTDecode'
   s.watchos.source_files = 'Auth0/*.swift'
   s.watchos.exclude_files = watchos_exclude_files
   s.tvos.source_files = 'Auth0/*.swift'
   s.tvos.exclude_files = web_auth_files
   s.tvos.dependency 'SimpleKeychain'
+  s.tvos.dependency 'JWTDecode'
 
   s.swift_versions = ['4.0', '4.1', '4.2', '5.0']
 end

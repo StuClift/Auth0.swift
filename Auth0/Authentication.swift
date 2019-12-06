@@ -497,6 +497,9 @@ public protocol Authentication: Trackable, Loggable {
      - returns: a request that will yield the result of delegation
     */
     func delegation(withParameters parameters: [String: Any]) -> Request<[String: Any], AuthenticationError>
+    
+    // TODO: Add documentation
+    func jwks() -> Request<JWKS, AuthenticationError>
 
 #if os(iOS)
     /**

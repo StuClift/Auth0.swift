@@ -35,6 +35,23 @@ func plainJson(from response: Response<AuthenticationError>, callback: Request<[
     }
 }
 
+func codable<T: Codable>(from response: Response<AuthenticationError>, callback: Request<T, AuthenticationError>.Callback) {
+    do {
+        if let dictionary = try response.result() as? [String: Any] {
+            let data = try JSONSerialization.data(withJSONObject: dictionary)
+            let decoder = JSONDecoder()
+            let decodedObject = try decoder.decode(T.self, from: data)
+            
+            callback(.success(result: decodedObject))
+        } else {
+            callback(.failure(error: AuthenticationError(string: string(response.data))))
+        }
+
+    } catch let error {
+        callback(.failure(error: error))
+    }
+}
+
 func authenticationObject<T: JSONObjectPayload>(from response: Response<AuthenticationError>, callback: Request<T, AuthenticationError>.Callback) {
     do {
         if let dictionary = try response.result() as? [String: Any], let object = T(json: dictionary) {
@@ -71,5 +88,32 @@ func noBody(from response: Response<AuthenticationError>, callback: Request<Void
         callback(.success(result: ()))
     } catch let error {
         callback(.failure(error: error))
+    }
+}
+
+// MARK: - Decorators
+
+func responseHook<T>(_ hook: @escaping (Result<T>, Authentication, @escaping (Result<T>) -> Void) -> Void,
+                     after handler: @escaping (Response<AuthenticationError>, @escaping Request<T, AuthenticationError>.Callback) -> Void,
+                     authentication: Authentication) -> ((Response<AuthenticationError>, @escaping Request<T, AuthenticationError>.Callback) -> Void) {
+    return { response, callback in
+        handler(response) { result in
+            hook(result, authentication) { result in
+                callback(result)
+            }
+        }
+    }
+}
+
+func checkIdTokenHook(_ result: Result<Credentials>, authentication: Authentication, callback: @escaping (Result<Credentials>) -> Void) {
+    switch result {
+    case .success(let credentials): validate(idToken: credentials.idToken, authentication: authentication) { error in
+        if let error = error {
+            // TODO: Wrap the error
+            return callback(Result.failure(error: error))
+        }
+        callback(result)
+    }
+    case .failure: callback(result)
     }
 }

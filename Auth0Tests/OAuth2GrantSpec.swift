@@ -29,14 +29,19 @@ import OHHTTPStubs
 class OAuth2GrantSpec: QuickSpec {
 
     override func spec() {
+        
+        let domain = URL.a0_url("samples.auth0.com")
+        let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
+        let idToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc1NjYwNDg5LCJpYXQiOjE1NzU0ODc2ODksIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NTU3NDA4OX0.Qg8r0v6cZZaZPQ1PIv6sWYCURix3zm3E5IUnlhNy_QguW_gm_FBk_DNR7AUMdwSQqWurar3yYhvCleEQVZ1sTlN33vM_xCelPf5D0vQt6VmS0o8UCV6lJV4KfVfHK8S1QeV1VVRhJz1PbT0yC0DnX0yBHE6WXWSW4d9FUYdEplC3jZZl_xVMkG7w3mKNwK3wXnYduCn8lkh88tvdK5ZUP8VqPdAOFmr_oy8_eRthsmOaoP0C6w9ayApPu4Ty9BZnIRX3T09CgD2XqM4vCfc2T_UygLhLXE6d9YoX-F3DmujFCFqmha1f4Tx_ISTbn1VlhQLz5ZPYer9ZaPIk-zRx3g"
+        let nonce = "a1b2c3d4e5"
 
         describe("ImplicitGrant") {
 
             var implicit: ImplicitGrant!
-            let idToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2JydWNrZS5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTQwODYzMzgzMTQyMjM5NDk2MzMiLCJhdWQiOiJZTjlTQ0hwcWY4dUxScFpia0xmZWhnbXFsQU9iUGdYTCIsImV4cCI6MTQ4MDU1NDg0MywiaWF0IjoxNDgwNTE4ODQzLCJub25jZSI6ImNiYTMyMSJ9.msDkQLVNK_urtbJJjb8h2ku-a9GVYgUFN9MvTTlO-v0"
-
+            
             beforeEach {
-                implicit = ImplicitGrant()
+                implicit = ImplicitGrant(authentication: authentication)
+                stub(condition: isJWKSPath(domain.host!)) { _ in jwksRS256() }.name = "RS256 JWK"
             }
 
             it("shoud build credentials") {
@@ -66,7 +71,7 @@ class OAuth2GrantSpec: QuickSpec {
             describe("ImplicitGrant with id_token") {
 
                 beforeEach {
-                    implicit = ImplicitGrant(responseType: [.idToken], nonce: "cba321")
+                    implicit = ImplicitGrant(authentication: authentication, responseType: [.idToken], nonce: nonce)
                 }
 
                 it("should build credentials") {
@@ -101,7 +106,7 @@ class OAuth2GrantSpec: QuickSpec {
                 }
 
                 it("should fail cause nonce does not match expected one") {
-                    implicit = ImplicitGrant(responseType: [.idToken], nonce: "nomatch")
+                    implicit = ImplicitGrant(authentication: authentication, responseType: [.idToken], nonce: "nomatch")
                     let values = ["id_token": idToken]
                     waitUntil { done in
                         implicit.credentials(from: values) {
@@ -117,7 +122,6 @@ class OAuth2GrantSpec: QuickSpec {
 
         describe("Authorization Code w/PKCE") {
 
-            let domain = URL.a0_url("samples.auth0.com")
             let method = "S256"
             let redirectURL = URL(string: "https://samples.auth0.com/callback")!
             var verifier: String!
@@ -128,7 +132,6 @@ class OAuth2GrantSpec: QuickSpec {
             beforeEach {
                 verifier = "\(arc4random())"
                 challenge = "\(arc4random())"
-                let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
                 pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response)
             }
 
@@ -143,7 +146,10 @@ class OAuth2GrantSpec: QuickSpec {
                 let token = UUID().uuidString
                 let code = UUID().uuidString
                 let values = ["code": code]
-                stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in return authResponse(accessToken: token) }.name = "Code Exchange Auth"
+                stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in
+                    return authResponse(accessToken: token, idToken: idToken)
+                    
+                }.name = "Code Exchange Auth"
                 waitUntil { done in
                     pkce.credentials(from: values) {
                         expect($0).to(haveCredentials(token))
@@ -190,8 +196,6 @@ class OAuth2GrantSpec: QuickSpec {
             var challenge: String!
             var pkce: PKCE!
             let response: [ResponseType] = [.code, .idToken]
-            let nonce = "abc123"
-            let idToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsIm5vbmNlIjoiYWJjMTIzIn0.l5K4au9Uq_NMImvuM2xigQNPa6S6LCKAqWs5c4_wrjQ"
             var authentication: Auth0Authentication!
 
             beforeEach {
@@ -211,8 +215,9 @@ class OAuth2GrantSpec: QuickSpec {
             it("shoud build credentials") {
                 let token = UUID().uuidString
                 let code = UUID().uuidString
-                let values = ["code": code, "id_token" : idToken]
+                let values = ["code": code, "id_token": idToken, "nonce": nonce]
                 stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in return authResponse(accessToken: token, idToken: idToken) }.name = "Code Exchange Auth"
+                stub(condition: isJWKSPath(domain.host!)) { _ in jwksRS256() }.name = "RS256 JWK"
                 waitUntil { done in
                     pkce.credentials(from: values) {
                         expect($0).to(haveCredentials(token))

@@ -132,6 +132,10 @@ func isLinkPath(_ domain: String, identifier: String) -> OHHTTPStubsTestBlock {
     return isHost(domain) && isPath("/api/v2/users/\(identifier)/identities")
 }
 
+func isJWKSPath(_ domain: String) -> OHHTTPStubsTestBlock {
+    return isHost(domain) && isPath("/.well-known/jwks.json")
+}
+
 func hasBearerToken(_ token: String) -> OHHTTPStubsTestBlock {
     return { request in
         return request.value(forHTTPHeaderField: "Authorization") == "Bearer \(token)"
