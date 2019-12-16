@@ -26,7 +26,7 @@ extension Array where Element == UInt8 {
     func a0_derEncode(as type: ASN1Type) -> [UInt8] {
         var derField: [UInt8] = []
         derField.append(type.byte)
-        derField.append(contentsOf: lengthField(of: self))
+        derField.append(contentsOf: derFieldLength(of: self))
         derField.append(contentsOf: self)
         return derField
     }
@@ -48,7 +48,7 @@ enum ASN1Type {
     }
 }
 
-private func lengthField(of valueField: [UInt8]) -> [UInt8] {
+private func derFieldLength(of valueField: [UInt8]) -> [UInt8] {
     var count = valueField.count
     if count < 128 {
         return [ UInt8(count) ]
