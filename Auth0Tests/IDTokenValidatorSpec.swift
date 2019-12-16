@@ -80,10 +80,11 @@ class IDTokenValidatorSpec: QuickSpec {
     // max_age was included in the request and (auth_time + max_age + leeway) is NOT a date in the future -> fail
 
     override func spec() {
-        let clientId = "tokens-test-123"
         let domain = "tokens-test.auth0.com"
+        let clientId = "tokens-test-123"
         let authentication = Auth0.authentication(clientId: clientId, domain: domain)
-        let signatureValidator = IDTokenSignatureValidator()
+        let validatorContext = IDTokenValidatorContext(domain: domain, clientId: clientId, jwksRequest: authentication.jwks())
+        let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
         let jwk = JWK(keyType: "RS",
                       keyId: JWKKid,
                       usage: nil,
@@ -97,7 +98,7 @@ class IDTokenValidatorSpec: QuickSpec {
         describe("sanity checks") {
             it("should fail to validate a nil id token") {
                 waitUntil { done in
-                    validate(idToken: nil, authentication: authentication) { error in
+                    validate(idToken: nil, context: validatorContext) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.missingToken))
                         done()
                     }
@@ -106,7 +107,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an empty id token") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.empty.rawValue, authentication: authentication) { error in
+                    validate(idToken: TokenFormatFixtures.empty.rawValue, context: validatorContext) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
@@ -115,14 +116,14 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode a malformed id token") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.invalidFormat1.rawValue, authentication: authentication) { error in
+                    validate(idToken: TokenFormatFixtures.invalidFormat1.rawValue, context: validatorContext) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
                 }
                 
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.invalidFormat2.rawValue, authentication: authentication) { error in
+                    validate(idToken: TokenFormatFixtures.invalidFormat2.rawValue, context: validatorContext) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
@@ -131,7 +132,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an id token that's missing the signature") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.missingSignature.rawValue, authentication: authentication) { error in
+                    validate(idToken: TokenFormatFixtures.missingSignature.rawValue, context: validatorContext) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
@@ -147,7 +148,7 @@ class IDTokenValidatorSpec: QuickSpec {
                     stub(condition: isJWKSPath(domain)) { _ in jwksRS256() }.name = "RS256 JWK"
                     
                     waitUntil { done in
-                        signatureValidator.validate(jwt, authentication: authentication) { error in
+                        signatureValidator.validate(jwt) { error in
                             expect(error).to(beNil())
                             done()
                         }
@@ -160,7 +161,7 @@ class IDTokenValidatorSpec: QuickSpec {
                     stub(condition: isJWKSPath(domain)) { _ in jwksUnsupported() }.name = "Unsupported JWK Algorithm"
 
                     waitUntil { done in
-                        signatureValidator.validate(jwt, authentication: authentication) { error in
+                        signatureValidator.validate(jwt) { error in
                             expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")))
                             done()
                         }

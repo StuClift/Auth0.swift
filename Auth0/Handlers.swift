@@ -107,12 +107,14 @@ func responseHook<T>(_ hook: @escaping (Result<T>, Authentication, @escaping (Re
 
 func checkIdTokenHook(_ result: Result<Credentials>, authentication: Authentication, callback: @escaping (Result<Credentials>) -> Void) {
     switch result {
-    case .success(let credentials): validate(idToken: credentials.idToken, authentication: authentication) { error in
-        if let error = error {
-            // TODO: Wrap the error
-            return callback(Result.failure(error: error))
-        }
-        callback(result)
+    case .success(let credentials):
+        let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
+        validate(idToken: credentials.idToken, context: context) { error in
+            if let error = error {
+                // TODO: Wrap the error
+                return callback(Result.failure(error: error))
+            }
+            callback(result)
     }
     case .failure: callback(result)
     }

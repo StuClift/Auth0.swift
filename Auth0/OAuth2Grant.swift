@@ -139,7 +139,8 @@ struct PKCE: OAuth2Grant {
                             }
                         case .none: break
                         }
-                        return validate(idToken: credentials.idToken, authentication: authentication) { error in
+                        let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
+                        return validate(idToken: credentials.idToken, context: context) { error in
                             if let error = error {
                                 // TODO: Wrap error
                                 print("VALIDATION FAILED")
@@ -169,7 +170,8 @@ private func validate(responseType: [ResponseType], token: String?, nonce: Strin
         return callback(WebAuthError.invalidIdTokenNonce)
     }
     let credentials = Credentials(accessToken: nil, tokenType: nil, idToken: token, refreshToken: nil, expiresIn: nil, scope: nil)
-    validate(idToken: credentials.idToken, authentication: authentication) { error in
+    let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
+    validate(idToken: credentials.idToken, context: context) { error in
         if let error = error {
             // TODO: Wrap error
             print("VALIDATION FAILED")
