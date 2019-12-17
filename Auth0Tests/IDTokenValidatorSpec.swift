@@ -82,9 +82,6 @@ class IDTokenValidatorSpec: QuickSpec {
     override func spec() {
         let domain = "tokens-test.auth0.com"
         let clientId = "tokens-test-123"
-        let authentication = Auth0.authentication(clientId: clientId, domain: domain)
-        let validatorContext = IDTokenValidatorContext(domain: domain, clientId: clientId, jwksRequest: authentication.jwks())
-        let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
         let jwk = JWK(keyType: "RS",
                       keyId: JWKKid,
                       usage: nil,
@@ -95,10 +92,19 @@ class IDTokenValidatorSpec: QuickSpec {
                       rsaModulus: JWKRSAModulus,
                       rsaExponent: JWKRSAExponent)
         
+        let authentication = Auth0.authentication(clientId: clientId, domain: domain)
+        let validatorContext = IDTokenValidatorContext(domain: domain, clientId: clientId, jwksRequest: authentication.jwks())
+        
         describe("sanity checks") {
+            let mockSignatureValidator = MockIDTokenSignatureValidator()
+            let mockClaimsValidator = MockIDTokenClaimsValidator()
+            
             it("should fail to validate a nil id token") {
                 waitUntil { done in
-                    validate(idToken: nil, context: validatorContext) { error in
+                    validate(idToken: nil,
+                             context: validatorContext,
+                             signatureValidator: mockSignatureValidator,
+                             claimsValidator: mockClaimsValidator) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.missingToken))
                         done()
                     }
@@ -107,7 +113,10 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an empty id token") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.empty.rawValue, context: validatorContext) { error in
+                    validate(idToken: TokenFormatFixtures.empty.rawValue,
+                             context: validatorContext,
+                             signatureValidator: mockSignatureValidator,
+                             claimsValidator: mockClaimsValidator) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
@@ -116,14 +125,20 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode a malformed id token") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.invalidFormat1.rawValue, context: validatorContext) { error in
+                    validate(idToken: TokenFormatFixtures.invalidFormat1.rawValue,
+                             context: validatorContext,
+                             signatureValidator: mockSignatureValidator,
+                             claimsValidator: mockClaimsValidator) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
                 }
                 
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.invalidFormat2.rawValue, context: validatorContext) { error in
+                    validate(idToken: TokenFormatFixtures.invalidFormat2.rawValue,
+                             context: validatorContext,
+                             signatureValidator: mockSignatureValidator,
+                             claimsValidator: mockClaimsValidator) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
@@ -132,7 +147,10 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an id token that's missing the signature") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.missingSignature.rawValue, context: validatorContext) { error in
+                    validate(idToken: TokenFormatFixtures.missingSignature.rawValue,
+                             context: validatorContext,
+                             signatureValidator: mockSignatureValidator,
+                             claimsValidator: mockClaimsValidator) { error in
                         expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
                         done()
                     }
@@ -142,6 +160,8 @@ class IDTokenValidatorSpec: QuickSpec {
         
         describe("signature validation") {
             context("algorithm support") {
+                let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
+                
                 it("should support RSA256") {
                     let jwt = try! decode(jwt: TokenSignatureFixtures.validRS256.rawValue)
                     
@@ -162,7 +182,9 @@ class IDTokenValidatorSpec: QuickSpec {
 
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")))
+                            let expectedError = IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")
+                            
+                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
                             done()
                         }
                     }
@@ -183,4 +205,16 @@ class IDTokenValidatorSpec: QuickSpec {
         }
     }
     
+}
+
+class MockIDTokenSignatureValidator: JWTSignatureValidator {
+    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void) {
+        callback(nil)
+    }
+}
+
+class MockIDTokenClaimsValidator: JWTClaimsValidator {
+    func validate(_ jwt: JWT) -> LocalizedError? {
+        return nil
+    }
 }
