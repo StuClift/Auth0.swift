@@ -54,9 +54,9 @@ Pod::Spec.new do |s|
   s.social_media_url = 'https://twitter.com/auth0'
 
   s.ios.deployment_target = '10.0'
-  s.osx.deployment_target = '10.11'
+  s.osx.deployment_target = '10.12'
   s.watchos.deployment_target = '2.0'
-  s.tvos.deployment_target = '9.0'
+  s.tvos.deployment_target = '10.0'
   s.requires_arc = true
 
   s.ios.source_files = 'Auth0/*.{swift,h,m}'
