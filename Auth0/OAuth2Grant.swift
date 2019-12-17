@@ -169,9 +169,8 @@ private func validate(responseType: [ResponseType], token: String?, nonce: Strin
     guard let expectedNonce = nonce, let token = token else {
         return callback(WebAuthError.invalidIdTokenNonce)
     }
-    let credentials = Credentials(accessToken: nil, tokenType: nil, idToken: token, refreshToken: nil, expiresIn: nil, scope: nil)
     let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
-    validate(idToken: credentials.idToken, context: context) { error in
+    validate(idToken: token, context: context) { error in
         if let error = error {
             // TODO: Wrap error
             print("VALIDATION FAILED")

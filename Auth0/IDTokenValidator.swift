@@ -100,7 +100,7 @@ class IDTokenSignatureValidator: JWTSignatureValidator {
             }
         }
         
-        public static func ==(lhs: ValidationError, rhs: ValidationError) -> Bool {
+        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.invalidAlgorithm, .invalidAlgorithm): return true
             case (.missingPublicKey, .missingPublicKey): return true
@@ -153,7 +153,7 @@ enum IDTokenValidationError: LocalizedError, Equatable {
         }
     }
     
-    public static func ==(lhs: IDTokenValidationError, rhs: IDTokenValidationError) -> Bool {
+    public static func == (lhs: IDTokenValidationError, rhs: IDTokenValidationError) -> Bool {
         switch (lhs, rhs) {
         case (.missingToken, .missingToken): return true
         case (.cannotDecode, .cannotDecode): return true
@@ -179,7 +179,6 @@ func validate(idToken: String?,
     guard let jwt = try? decode(jwt: idToken) else {
         return callback(IDTokenValidationError.cannotDecode)
     }
-    
     let validator = IDTokenValidator(signatureValidator: signatureValidator ?? IDTokenSignatureValidator(context: context),
                                      claimsValidator: claimsValidator ?? IDTokenClaimsValidator(context: context),
                                      context: context)
