@@ -90,32 +90,3 @@ func noBody(from response: Response<AuthenticationError>, callback: Request<Void
         callback(.failure(error: error))
     }
 }
-
-// MARK: - Decorators
-
-func responseHook<T>(_ hook: @escaping (Result<T>, Authentication, @escaping (Result<T>) -> Void) -> Void,
-                     after handler: @escaping (Response<AuthenticationError>, @escaping Request<T, AuthenticationError>.Callback) -> Void,
-                     authentication: Authentication) -> ((Response<AuthenticationError>, @escaping Request<T, AuthenticationError>.Callback) -> Void) {
-    return { response, callback in
-        handler(response) { result in
-            hook(result, authentication) { result in
-                callback(result)
-            }
-        }
-    }
-}
-
-func checkIdTokenHook(_ result: Result<Credentials>, authentication: Authentication, callback: @escaping (Result<Credentials>) -> Void) {
-    switch result {
-    case .success(let credentials):
-        let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
-        validate(idToken: credentials.idToken, context: context) { error in
-            if let error = error {
-                // TODO: Wrap the error
-                return callback(Result.failure(error: error))
-            }
-            callback(result)
-    }
-    case .failure: callback(result)
-    }
-}

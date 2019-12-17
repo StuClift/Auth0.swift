@@ -42,13 +42,13 @@ public struct Request<T, E: Auth0Error>: Requestable {
     let session: URLSession
     let url: URL
     let method: String
-    let handle: (Response<E>, @escaping Callback) -> Void
+    let handle: (Response<E>, Callback) -> Void
     let payload: [String: Any]
     let headers: [String: String]
     let logger: Logger?
     let telemetry: Telemetry
 
-    init(session: URLSession, url: URL, method: String, handle: @escaping (Response<E>, @escaping Callback) -> Void, payload: [String: Any] = [:], headers: [String: String] = [:], logger: Logger?, telemetry: Telemetry) {
+    init(session: URLSession, url: URL, method: String, handle: @escaping (Response<E>, Callback) -> Void, payload: [String: Any] = [:], headers: [String: String] = [:], logger: Logger?, telemetry: Telemetry) {
         self.session = session
         self.url = url
         self.method = method
