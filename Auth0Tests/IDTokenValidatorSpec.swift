@@ -17,7 +17,7 @@ import JWTDecode
 struct IDTokenFixtures {
     struct valid {
         struct signature {
-            static let rs256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2MiwiZXh0cmFfY2xhaW0iOiJoZWxsby13b3JsZCJ9.Mj1TBL5mqBbdCtHupttuCAL-BovfxXtm8NM3z0JrSQ4MjXwB9DJvzDWsb1jOSXdeTGymrWjBWrs4GBzZdiFlKl1n1ZP-uyiWrNY1OEiJuo1a0v7po66-F18j7uEhfOMr8tdWSIJkY38k79TJdnsJvrJooevqeIdGlFy3g0ohnVpUJ_5KdhSV7rKd9F4tnnP--fu0TCACg8DVvr_FAkMlnbiyJGr7ZNi4YRn_VermaLAJbI8c752EME0-oYy1pEOYLeCJntSPe_eLbeL-WmVnhpZJSPDexTWAxe1KCJzajK5XRnSLQype-OmFBnAo9Cle2yfIMJTl2dA3bwdk2OkgRw"
+            static let rs256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2Mn0.i_TYzZXqIMCUGC8F6gH9LvZXQoW0nZR4_nGKisKWVWlPY-y28odtQFekYfrYhjSm-c1-UAoQahUIhGT8UvwtH4so3SRgOyRHiMlm531CnJlL1ybP2ihC57AuQSb1Xt9x614a26UuoXUOuDrc7IVPyGWXGyWrakpMZIZ8YPBXZpjzOcKg9Z2jqg9n_RRSBzuskscXAEYORouQvHW__0nez8KSy3SCMYyohBlI5fscm3GpABFYnZMzNClrL47izbZ8KgdmKXNj-Ej2edTGyiX4-sj7g-momN2HcfJ7b7TeUzMqLGdfbi-fyGG6Fv7pmIglbTShgUip08ucNOTgD-bSOg"
         }
         
         struct claims {}
@@ -172,13 +172,15 @@ class IDTokenValidatorSpec: QuickSpec {
         }
         
         describe("signature validation") {
+            let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
+            
+            beforeEach {
+                stub(condition: isJWKSPath(domain)) { _ in jwksRS256() }.name = "RS256 JWK"
+            }
+            
             context("algorithm support") {
-                let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
-                
                 it("should support RSA256") {
                     let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
-                    
-                    stub(condition: isJWKSPath(domain)) { _ in jwksRS256() }.name = "RS256 JWK"
                     
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
@@ -191,8 +193,6 @@ class IDTokenValidatorSpec: QuickSpec {
                 it("should not support other algorithms") {
                     let jwt = try! decode(jwt: IDTokenFixtures.invalid.signature.unsupportedAlgorithm)
                     
-                    stub(condition: isJWKSPath(domain)) { _ in jwksUnsupported() }.name = "Unsupported JWK Algorithm"
-
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
                             let expectedError = IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")
