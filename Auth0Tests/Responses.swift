@@ -119,7 +119,7 @@ func managementErrorResponse(error: String, description: String, code: String, s
     return OHHTTPStubsResponse(jsonObject: ["code": code, "description": description, "statusCode": statusCode, "error": error], statusCode: Int32(statusCode), headers: ["Content-Type": "application/json"])
 }
 
-func jwksRS256(n: String = JWKRSAModulus, e: String = JWKRSAExponent, kid: String = JWKKid) -> OHHTTPStubsResponse {
+func jwksResponse(n: String = JWKRSAModulus, e: String = JWKRSAExponent, kid: String? = JWKKid) -> OHHTTPStubsResponse {
     let jwks = ["keys": [
             ["alg": "RS256",
              "kty": "RSA",
@@ -133,13 +133,6 @@ func jwksRS256(n: String = JWKRSAModulus, e: String = JWKRSAExponent, kid: Strin
     return OHHTTPStubsResponse(jsonObject: jwks, statusCode: 200, headers: nil)
 }
 
-func jwksUnsupported(kid: String = JWKKid) -> OHHTTPStubsResponse {
-    let jwks = ["keys": [
-            ["alg": "none",
-             "use": "sig",
-             "kid": kid]
-        ]
-    ]
-    
-    return OHHTTPStubsResponse(jsonObject: jwks, statusCode: 200, headers: nil)
+func jwksErrorResponse() -> OHHTTPStubsResponse {
+    return OHHTTPStubsResponse(jsonObject: [], statusCode: 500, headers: nil)
 }

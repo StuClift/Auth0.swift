@@ -380,7 +380,7 @@ class CredentialsManagerSpec: QuickSpec {
             context("renew") {
                 
                 beforeEach {
-                    stub(condition: isJWKSPath(authentication.url.host!)) { _ in jwksRS256() }.name = "RS256 JWK"
+                    stub(condition: isJWKSPath(authentication.url.host!)) { _ in jwksResponse() }
                 }
 
                 it("should yield new credentials, maintain refresh token") {

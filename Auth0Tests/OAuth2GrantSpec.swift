@@ -40,7 +40,7 @@ class OAuth2GrantSpec: QuickSpec {
             
             beforeEach {
                 implicit = ImplicitGrant(authentication: authentication)
-                stub(condition: isJWKSPath(domain.host!)) { _ in jwksRS256() }.name = "RS256 JWK"
+                stub(condition: isJWKSPath(domain.host!)) { _ in jwksResponse() }
             }
 
             it("shoud build credentials") {
@@ -216,7 +216,7 @@ class OAuth2GrantSpec: QuickSpec {
                 let code = UUID().uuidString
                 let values = ["code": code, "id_token": IDTokenFixtures.valid.signature.rs256, "nonce": nonce]
                 stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in return authResponse(accessToken: token, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Code Exchange Auth"
-                stub(condition: isJWKSPath(domain.host!)) { _ in jwksRS256() }.name = "RS256 JWK"
+                stub(condition: isJWKSPath(domain.host!)) { _ in jwksResponse() }
                 waitUntil { done in
                     pkce.credentials(from: values) {
                         expect($0).to(haveCredentials(token))

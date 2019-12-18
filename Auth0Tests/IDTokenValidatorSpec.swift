@@ -174,13 +174,11 @@ class IDTokenValidatorSpec: QuickSpec {
         describe("signature validation") {
             let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
             
-            beforeEach {
-                stub(condition: isJWKSPath(domain)) { _ in jwksRS256() }.name = "RS256 JWK"
-            }
-            
             context("algorithm support") {
                 it("should support RSA256") {
                     let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
+                    
+                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
                     
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
@@ -193,10 +191,50 @@ class IDTokenValidatorSpec: QuickSpec {
                 it("should not support other algorithms") {
                     let jwt = try! decode(jwt: IDTokenFixtures.invalid.signature.unsupportedAlgorithm)
                     
+                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
+                    
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
                             let expectedError = IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")
                             
+                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
+                            done()
+                        }
+                    }
+                }
+            }
+            
+            context("kid validation") {
+                let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
+                let expectedError = IDTokenSignatureValidator.ValidationError.missingPublicKey(kid: "")
+                
+                it("should fail if the kid is not present") {
+                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse(kid: nil) }
+                    
+                    waitUntil { done in
+                        signatureValidator.validate(jwt) { error in
+                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
+                            done()
+                        }
+                    }
+                }
+                
+                it("should fail if the kid does not match") {
+                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse(kid: "abc123") }
+                    
+                    waitUntil { done in
+                        signatureValidator.validate(jwt) { error in
+                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
+                            done()
+                        }
+                    }
+                }
+                
+                it("should fail if the keys cannot be retrieved") {
+                    stub(condition: isJWKSPath(domain)) { _ in jwksErrorResponse() }
+                    
+                    waitUntil { done in
+                        signatureValidator.validate(jwt) { error in                            
                             expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
                             done()
                         }
