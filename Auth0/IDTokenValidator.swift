@@ -131,7 +131,7 @@ class IDTokenSignatureValidator: JWTSignatureValidator {
             .start { result in
                 switch result {
                 case .success(let jwks):
-                    guard let jwk = jwks.keys.first(where: {$0.keyId == kid}) else {
+                    guard let jwk = jwks.key(id: kid) else {
                         callback(ValidationError.missingPublicKey(kid: kid))
                         return
                     }

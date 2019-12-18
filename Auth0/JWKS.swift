@@ -20,12 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
 import Foundation
 import Security
 
 public struct JWKS: Codable {
     let keys: [JWK]
+}
+
+extension JWKS {
+    func key(id kid: String) -> JWK? {
+        return keys.first { $0.keyId == kid }
+    }
 }
 
 public struct JWK: Codable {
