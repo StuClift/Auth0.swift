@@ -22,13 +22,15 @@
 
 import Foundation
 
+// TODO: Ask about this. Include attribution comment? Or what? https://github.com/airsidemobile/JOSESwift/blob/master/JOSESwift/Sources/ASN1DEREncoding.swift
+
 extension Array where Element == UInt8 {
     func a0_derEncode(as type: ASN1Type) -> [UInt8] {
-        var derField: [UInt8] = []
-        derField.append(type.byte)
-        derField.append(contentsOf: derFieldLength(of: self))
-        derField.append(contentsOf: self)
-        return derField
+        var tlvTriplet: [UInt8] = []
+        tlvTriplet.append(type.byte)
+        tlvTriplet.append(contentsOf: derFieldLength(of: self))
+        tlvTriplet.append(contentsOf: self)
+        return tlvTriplet
     }
 }
 

@@ -14,17 +14,30 @@ import JWTDecode
 
 @testable import Auth0
 
-fileprivate enum TokenFormatFixtures: String {
-    case empty = ""
-    case invalidFormat1 = "a.b.c.d.e"
-    case invalidFormat2 = "a.b."
-    case missingSignature = "a.b"
-}
-
-fileprivate enum TokenSignatureFixtures: String {
-    case validRS256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc1NjYwNDg5LCJpYXQiOjE1NzU0ODc2ODksIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NTU3NDA4OX0.Qg8r0v6cZZaZPQ1PIv6sWYCURix3zm3E5IUnlhNy_QguW_gm_FBk_DNR7AUMdwSQqWurar3yYhvCleEQVZ1sTlN33vM_xCelPf5D0vQt6VmS0o8UCV6lJV4KfVfHK8S1QeV1VVRhJz1PbT0yC0DnX0yBHE6WXWSW4d9FUYdEplC3jZZl_xVMkG7w3mKNwK3wXnYduCn8lkh88tvdK5ZUP8VqPdAOFmr_oy8_eRthsmOaoP0C6w9ayApPu4Ty9BZnIRX3T09CgD2XqM4vCfc2T_UygLhLXE6d9YoX-F3DmujFCFqmha1f4Tx_ISTbn1VlhQLz5ZPYer9ZaPIk-zRx3g"
-    case invalidRS256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc1NjYwNDg5LCJpYXQiOjE1NzU0ODc2ODksIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NTU3NDA4OX0.invalidsignature"
-    case unsupportedAlgorithm = "eyJhbGciOiJub25lIiwia2lkIjoia2V5MTIzIn0.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc1NjYwNDg5LCJpYXQiOjE1NzU0ODc2ODksIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NTU3NDA4OX0."
+struct IDTokenFixtures {
+    struct valid {
+        struct signature {
+            static let rs256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2MiwiZXh0cmFfY2xhaW0iOiJoZWxsby13b3JsZCJ9.Mj1TBL5mqBbdCtHupttuCAL-BovfxXtm8NM3z0JrSQ4MjXwB9DJvzDWsb1jOSXdeTGymrWjBWrs4GBzZdiFlKl1n1ZP-uyiWrNY1OEiJuo1a0v7po66-F18j7uEhfOMr8tdWSIJkY38k79TJdnsJvrJooevqeIdGlFy3g0ohnVpUJ_5KdhSV7rKd9F4tnnP--fu0TCACg8DVvr_FAkMlnbiyJGr7ZNi4YRn_VermaLAJbI8c752EME0-oYy1pEOYLeCJntSPe_eLbeL-WmVnhpZJSPDexTWAxe1KCJzajK5XRnSLQype-OmFBnAo9Cle2yfIMJTl2dA3bwdk2OkgRw"
+        }
+        
+        struct claims {}
+    }
+    
+    struct invalid {
+        struct format {
+            static let empty = ""
+            static let tooLong = "a.b.c.d.e"
+            static let tooShort = "a.b."
+            static let missingSignature = "a.b"
+        }
+        
+        struct signature {
+            static let rs256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2Mn0.invalidsignature"
+            static let unsupportedAlgorithm = "eyJhbGciOiJub25lIiwia2lkIjoia2V5MTIzIn0.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2Mn0."
+        }
+        
+        struct claims {}
+    }
 }
 
 class IDTokenValidatorSpec: QuickSpec {
@@ -113,7 +126,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an empty id token") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.empty.rawValue,
+                    validate(idToken: IDTokenFixtures.invalid.format.empty,
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -125,7 +138,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode a malformed id token") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.invalidFormat1.rawValue,
+                    validate(idToken: IDTokenFixtures.invalid.format.tooLong,
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -135,7 +148,7 @@ class IDTokenValidatorSpec: QuickSpec {
                 }
                 
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.invalidFormat2.rawValue,
+                    validate(idToken: IDTokenFixtures.invalid.format.tooShort,
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -147,7 +160,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an id token that's missing the signature") {
                 waitUntil { done in
-                    validate(idToken: TokenFormatFixtures.missingSignature.rawValue,
+                    validate(idToken: IDTokenFixtures.invalid.format.missingSignature,
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -163,7 +176,7 @@ class IDTokenValidatorSpec: QuickSpec {
                 let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
                 
                 it("should support RSA256") {
-                    let jwt = try! decode(jwt: TokenSignatureFixtures.validRS256.rawValue)
+                    let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
                     
                     stub(condition: isJWKSPath(domain)) { _ in jwksRS256() }.name = "RS256 JWK"
                     
@@ -176,7 +189,7 @@ class IDTokenValidatorSpec: QuickSpec {
                 }
 
                 it("should not support other algorithms") {
-                    let jwt = try! decode(jwt: TokenSignatureFixtures.unsupportedAlgorithm.rawValue)
+                    let jwt = try! decode(jwt: IDTokenFixtures.invalid.signature.unsupportedAlgorithm)
                     
                     stub(condition: isJWKSPath(domain)) { _ in jwksUnsupported() }.name = "Unsupported JWK Algorithm"
 
@@ -192,13 +205,13 @@ class IDTokenValidatorSpec: QuickSpec {
             }
             
             it("should pass with a correct RS256 signature") {
-                let jwt = try! decode(jwt: TokenSignatureFixtures.validRS256.rawValue)
+                let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
                 
                 expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beTrue())
             }
             
             it("should fail with an incorrect RS256 signature") {
-                let jwt = try! decode(jwt: TokenSignatureFixtures.invalidRS256.rawValue)
+                let jwt = try! decode(jwt: IDTokenFixtures.invalid.signature.rs256)
 
                 expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beFalse())
             }

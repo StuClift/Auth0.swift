@@ -34,9 +34,7 @@ private let Connection = "facebook"
 private let Scope = "openid"
 private let Parameters: [String: Any] = [:]
 private let Timeout: TimeInterval = 2
-
 private let AccessToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
-private let IdToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 private let FacebookToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 private let InvalidFacebookToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 
@@ -113,7 +111,7 @@ class NativeAuthSpec: QuickSpec {
         describe("start") {
 
             beforeEach {
-                stub(condition: isOAuthAccessToken(Domain) && hasAtLeast(["access_token":FacebookToken, "connection": "facebook", "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IdToken) }.name = "Facebook Auth OpenID"
+                stub(condition: isOAuthAccessToken(Domain) && hasAtLeast(["access_token":FacebookToken, "connection": "facebook", "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Facebook Auth OpenID"
                 stub(condition: isOAuthAccessToken(Domain) && hasAtLeast(["access_token":InvalidFacebookToken, "connection": "facebook", "scope": "openid"])) { _ in return authFailure(error: "invalid_token", description: "invalid_token") }.name = "invalid token"
             }
 

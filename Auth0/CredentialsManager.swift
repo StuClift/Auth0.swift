@@ -186,6 +186,18 @@ public struct CredentialsManager {
                                                  refreshToken: refreshToken,
                                                  expiresIn: credentials.expiresIn,
                                                  scope: credentials.scope)
+                if let idToken = credentials.idToken {
+                    let validatorContext = IDTokenValidatorContext(domain: self.authentication.url.host!,
+                                                                   clientId: self.authentication.clientId,
+                                                                   jwksRequest: self.authentication.jwks())
+                    return validate(idToken: idToken, context: validatorContext) { error in
+                        if let error = error {
+                            return callback(.failedRefresh(error), nil)
+                        }
+                        _ = self.store(credentials: newCredentials)
+                        callback(nil, newCredentials)
+                    }
+                }
                 _ = self.store(credentials: newCredentials)
                 callback(nil, newCredentials)
             case .failure(let error):
