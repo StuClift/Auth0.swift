@@ -52,7 +52,6 @@ struct ImplicitGrant: OAuth2Grant {
                  nonce: self.defaults["nonce"],
                  authentication: self.authentication) { error in
             if let error = error {
-                // TODO: Wrap the error
                 return callback(.failure(error: error))
             }
             guard !responseType.contains(.token) || values["access_token"] != nil else {
@@ -111,7 +110,6 @@ struct PKCE: OAuth2Grant {
         let clientId = self.authentication.clientId
         validate(responseType: self.responseType, token: idToken, nonce: self.defaults["nonce"], authentication: self.authentication) { [authentication = self.authentication] error in
             if let error = error {
-                // TODO: Wrap the error
                 return callback(.failure(error: error))
             }
             authentication
@@ -142,11 +140,8 @@ struct PKCE: OAuth2Grant {
                         let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
                         return validate(idToken: credentials.idToken, context: context) { error in
                             if let error = error {
-                                // TODO: Wrap error
-                                print("VALIDATION FAILED")
                                 return callback(Result.failure(error: error))
                             }
-                            print("VALIDATION SUCCESSFUL")
                             callback(result)
                         }
                     }
@@ -172,11 +167,8 @@ private func validate(responseType: [ResponseType], token: String?, nonce: Strin
     let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
     validate(idToken: token, context: context) { error in
         if let error = error {
-            // TODO: Wrap error
-            print("VALIDATION FAILED")
             return callback(error)
         }
-        print("VALIDATION SUCCESSFUL")
         // Will be done with the claims validation
         if getNonce(jwt: token) != expectedNonce {
             callback(WebAuthError.invalidIdTokenNonce)
