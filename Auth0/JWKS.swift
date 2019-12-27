@@ -67,9 +67,9 @@ extension JWK {
             modulusBytes.insert(0x00, at: 0)
         }
         let exponentBytes = [UInt8](exponent)
-        let modulusEncoded = modulusBytes.a0_derEncode(as: .integer)
-        let exponentEncoded = exponentBytes.a0_derEncode(as: .integer)
-        let sequenceEncoded = (modulusEncoded + exponentEncoded).a0_derEncode(as: .sequence)
+        let modulusEncoded = modulusBytes.a0_derEncode(as: 2)
+        let exponentEncoded = exponentBytes.a0_derEncode(as: 2)
+        let sequenceEncoded = (modulusEncoded + exponentEncoded).a0_derEncode(as: 48)
         let data = Data(sequenceEncoded)
         let sizeInBits = data.count * MemoryLayout<UInt8>.size
         let attributes: [CFString: Any] = [
