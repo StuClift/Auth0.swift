@@ -115,15 +115,14 @@ func generateJWT(alg: String = JWTAlgorithm.rs256.rawValue,
                                authTime: authTime,
                                nonce: nonce)
     
-    let payload = "\(header).\(body)"
-
+    let signableParts = "\(header).\(body)"
     var signature = "SIGNATURE"
     
     if let algorithm = JWTAlgorithm(rawValue: alg) {
-        signature = algorithm.sign(value: payload.data(using: .utf8)!).a0_encodeBase64URLSafe()!
+        signature = algorithm.sign(value: signableParts.data(using: .utf8)!).a0_encodeBase64URLSafe()!
     }
     
-    return try! decode(jwt: "\(payload).\(signature)")
+    return try! decode(jwt: "\(signableParts).\(signature)")
 }
 
 // MARK: - JWK
@@ -164,14 +163,14 @@ func generateRSAJWK(from publicKey: SecKey = TestKeys.rsaPublic) -> JWK {
         let encodedExponent = exponent.a0_encodeBase64URLSafe()
         
         return JWK(keyType: "RSA",
-                      keyId: "key123",
-                      usage: "sig",
-                      algorithm: JWTAlgorithm.rs256.rawValue,
-                      certUrl: nil,
-                      certThumbprint: nil,
-                      certChain: nil,
-                      rsaModulus: encodedModulus,
-                      rsaExponent: encodedExponent)
+                   keyId: "key123",
+                   usage: "sig",
+                   algorithm: JWTAlgorithm.rs256.rawValue,
+                   certUrl: nil,
+                   certThumbprint: nil,
+                   certChain: nil,
+                   rsaModulus: encodedModulus,
+                   rsaExponent: encodedExponent)
     }
     
     return publicKey.export().withUnsafeBytes { unsafeRawBufferPointer in
