@@ -105,48 +105,52 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                 }
             }
             
-            it("should fail to decode an empty id token") {
-                waitUntil { done in
-                    validate(idToken: "",
-                             context: validatorContext,
-                             signatureValidator: mockSignatureValidator,
-                             claimsValidator: mockClaimsValidator) { error in
-                        expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
-                        done()
-                    }
-                }
-            }
-            
-            it("should fail to decode a malformed id token") {
-                waitUntil { done in
-                    validate(idToken: "a.b.c.d.e",
-                             context: validatorContext,
-                             signatureValidator: mockSignatureValidator,
-                             claimsValidator: mockClaimsValidator) { error in
-                        expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
-                        done()
+            context("id token decoding") {
+                let expectedError = IDTokenValidationError.cannotDecode
+                
+                it("should fail to decode an empty id token") {
+                    waitUntil { done in
+                        validate(idToken: "",
+                                 context: validatorContext,
+                                 signatureValidator: mockSignatureValidator,
+                                 claimsValidator: mockClaimsValidator) { error in
+                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            done()
+                        }
                     }
                 }
                 
-                waitUntil { done in
-                    validate(idToken: "a.b.",
-                             context: validatorContext,
-                             signatureValidator: mockSignatureValidator,
-                             claimsValidator: mockClaimsValidator) { error in
-                        expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
-                        done()
+                it("should fail to decode a malformed id token") {
+                    waitUntil { done in
+                        validate(idToken: "a.b.c.d.e",
+                                 context: validatorContext,
+                                 signatureValidator: mockSignatureValidator,
+                                 claimsValidator: mockClaimsValidator) { error in
+                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            done()
+                        }
+                    }
+                    
+                    waitUntil { done in
+                        validate(idToken: "a.b.",
+                                 context: validatorContext,
+                                 signatureValidator: mockSignatureValidator,
+                                 claimsValidator: mockClaimsValidator) { error in
+                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            done()
+                        }
                     }
                 }
-            }
-            
-            it("should fail to decode an id token that's missing the signature") {
-                waitUntil { done in
-                    validate(idToken: "a.b",
-                             context: validatorContext,
-                             signatureValidator: mockSignatureValidator,
-                             claimsValidator: mockClaimsValidator) { error in
-                        expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.cannotDecode))
-                        done()
+                
+                it("should fail to decode an id token that's missing the signature") {
+                    waitUntil { done in
+                        validate(idToken: "a.b",
+                                 context: validatorContext,
+                                 signatureValidator: mockSignatureValidator,
+                                 claimsValidator: mockClaimsValidator) { error in
+                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            done()
+                        }
                     }
                 }
             }

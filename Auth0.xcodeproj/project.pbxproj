@@ -107,6 +107,9 @@
 		5C316FD323BA963C002559A7 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C316FD223BA963C002559A7 /* Extensions.swift */; };
 		5C316FD423BA963C002559A7 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C316FD223BA963C002559A7 /* Extensions.swift */; };
 		5C316FD523BA963C002559A7 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C316FD223BA963C002559A7 /* Extensions.swift */; };
+		5C316FD723BAC0D5002559A7 /* JWTAlgorithmSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C316FD623BAC0D5002559A7 /* JWTAlgorithmSpec.swift */; };
+		5C316FD823BAC0D5002559A7 /* JWTAlgorithmSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C316FD623BAC0D5002559A7 /* JWTAlgorithmSpec.swift */; };
+		5C316FD923BAC0D5002559A7 /* JWTAlgorithmSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C316FD623BAC0D5002559A7 /* JWTAlgorithmSpec.swift */; };
 		5F06DDA51CC451540011842B /* Auth0.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F06DD781CC448B10011842B /* Auth0.framework */; };
 		5F06DDB41CC451700011842B /* Auth0.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F06DD851CC448C90011842B /* Auth0.framework */; };
 		5F06DDC91CC66B710011842B /* Auth0.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F06DDC81CC66B710011842B /* Auth0.swift */; };
@@ -491,6 +494,7 @@
 		5C316FC923BA9077002559A7 /* Generators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Generators.swift; sourceTree = "<group>"; };
 		5C316FCE23BA9183002559A7 /* IDTokenValidatorMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDTokenValidatorMocks.swift; sourceTree = "<group>"; };
 		5C316FD223BA963C002559A7 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		5C316FD623BAC0D5002559A7 /* JWTAlgorithmSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JWTAlgorithmSpec.swift; sourceTree = "<group>"; };
 		5F049B6C1CB42C29006F6C05 /* Auth0.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Auth0.h; path = Auth0/Auth0.h; sourceTree = "<group>"; };
 		5F049B6E1CB42C29006F6C05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Auth0/Info.plist; sourceTree = "<group>"; };
 		5F06DD781CC448B10011842B /* Auth0.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Auth0.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -975,6 +979,7 @@
 				5FBBF03A1CC96AA70024D2AF /* Responses.swift */,
 				5C316FC923BA9077002559A7 /* Generators.swift */,
 				5C316FD223BA963C002559A7 /* Extensions.swift */,
+				5C316FD623BAC0D5002559A7 /* JWTAlgorithmSpec.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -1866,6 +1871,7 @@
 				5C316FCA23BA9077002559A7 /* Generators.swift in Sources */,
 				5FE2F8C61CD1522F003628F4 /* ProfileSpec.swift in Sources */,
 				5B6269E71E3F702000305093 /* NativeAuthSpec.swift in Sources */,
+				5C316FD723BAC0D5002559A7 /* JWTAlgorithmSpec.swift in Sources */,
 				5C316FD323BA963C002559A7 /* Extensions.swift in Sources */,
 				5FADB6031CEC0C3300D4BB50 /* UsersSpec.swift in Sources */,
 				5F686A771D4AB90900412E3D /* TransactionStoreSpec.swift in Sources */,
@@ -1888,6 +1894,7 @@
 				5FE2F8A71CCA9C17003628F4 /* CredentialsSpec.swift in Sources */,
 				5FD255B21D14A9E000387ECB /* AuthenticationErrorSpec.swift in Sources */,
 				5FADB60A1CED500900D4BB50 /* ManagementSpec.swift in Sources */,
+				5C316FD823BAC0D5002559A7 /* JWTAlgorithmSpec.swift in Sources */,
 				5F28B4681D8300D50000EB23 /* LoggerSpec.swift in Sources */,
 				5C316FC723BA8D3A002559A7 /* IDTokenSignatureValidatorSpec.swift in Sources */,
 				5C316FCB23BA9077002559A7 /* Generators.swift in Sources */,
@@ -1999,6 +2006,7 @@
 				5F28B4691D8300D50000EB23 /* LoggerSpec.swift in Sources */,
 				5F1FBB9A1D8A44C0006B0B85 /* ResponseSpec.swift in Sources */,
 				5F331B0C1D4BB7F900AE4382 /* UsersSpec.swift in Sources */,
+				5C316FD923BAC0D5002559A7 /* JWTAlgorithmSpec.swift in Sources */,
 				5F331B0E1D4BB80700AE4382 /* Matchers.swift in Sources */,
 				5C316FC823BA8D3A002559A7 /* IDTokenSignatureValidatorSpec.swift in Sources */,
 				5C316FCC23BA9077002559A7 /* Generators.swift in Sources */,

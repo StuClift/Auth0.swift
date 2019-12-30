@@ -36,10 +36,12 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
             let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
             
             context("algorithm support") {
+                beforeEach {
+                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
+                }
+                
                 it("should support RSA256") {
                     let jwt = generateJWT()
-                    
-                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
                     
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
@@ -51,9 +53,7 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
 
                 it("should not support other algorithms") {
                     let jwt = generateJWT(alg: "UNSUPPORTED")
-                    
-                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
-                    
+                                        
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
                             let expectedError = IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")
@@ -101,20 +101,6 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
                         }
                     }
                 }
-            }
-            
-            it("should return true with a correct RS256 signature") {
-                let jwt = generateJWT()
-                let jwk = generateRSAJWK()
-                
-                expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beTrue())
-            }
-            
-            it("should return false with an incorrect RS256 signature") {
-                let jwt = generateJWT(alg: "UNSUPPORTED")
-                let jwk = generateRSAJWK()
-                
-                expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beFalse())
             }
         }
     }
