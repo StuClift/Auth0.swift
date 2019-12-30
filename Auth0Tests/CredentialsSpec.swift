@@ -25,6 +25,7 @@ import Nimble
 @testable import Auth0
 
 private let AccessToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+private let IDToken = generateJWT().string
 private let Bearer = "bearer"
 private let RefreshToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 private let expiresIn: TimeInterval = 3600
@@ -36,11 +37,11 @@ class CredentialsSpec: QuickSpec {
         describe("init from json") {
 
             it("should have all tokens and token_type") {
-                let credentials = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDTokenFixtures.valid.signature.rs256, "refresh_token": RefreshToken, "expires_in" : expiresIn, "scope": Scope])
+                let credentials = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDToken, "refresh_token": RefreshToken, "expires_in" : expiresIn, "scope": Scope])
                 expect(credentials).toNot(beNil())
                 expect(credentials.accessToken) == AccessToken
                 expect(credentials.tokenType) == Bearer
-                expect(credentials.idToken) == IDTokenFixtures.valid.signature.rs256
+                expect(credentials.idToken) == IDToken
                 expect(credentials.refreshToken) == RefreshToken
                 expect(credentials.expiresIn).to(beCloseTo(Date(timeIntervalSinceNow: expiresIn), within: 5))
                 expect(credentials.scope) == Scope
@@ -57,8 +58,8 @@ class CredentialsSpec: QuickSpec {
             }
 
             it("should have id_token") {
-                let credentials = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDTokenFixtures.valid.signature.rs256])
-                expect(credentials.idToken) == IDTokenFixtures.valid.signature.rs256
+                let credentials = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDToken])
+                expect(credentials.idToken) == IDToken
             }
 
             it("should have refresh_token") {
@@ -99,19 +100,19 @@ class CredentialsSpec: QuickSpec {
         describe("secure coding") {
 
             it("should unarchive as credentials type") {
-                let credentialsOrig = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDTokenFixtures.valid.signature.rs256, "refresh_token": RefreshToken, "expires_in" : expiresIn, "scope" : Scope])
+                let credentialsOrig = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDToken, "refresh_token": RefreshToken, "expires_in" : expiresIn, "scope" : Scope])
                 let saveData = NSKeyedArchiver.archivedData(withRootObject: credentialsOrig)
                 let credentials = NSKeyedUnarchiver.unarchiveObject(with: saveData)
                 expect(credentials as? Credentials).toNot(beNil())
             }
 
             it("should have all properties") {
-                let credentialsOrig = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDTokenFixtures.valid.signature.rs256, "refresh_token": RefreshToken, "expires_in" : expiresIn, "scope" : Scope])
+                let credentialsOrig = Credentials(json: ["access_token": AccessToken, "token_type": Bearer, "id_token": IDToken, "refresh_token": RefreshToken, "expires_in" : expiresIn, "scope" : Scope])
                 let saveData = NSKeyedArchiver.archivedData(withRootObject: credentialsOrig)
                 let credentials = NSKeyedUnarchiver.unarchiveObject(with: saveData) as! Credentials
                 expect(credentials.accessToken) == AccessToken
                 expect(credentials.tokenType) == Bearer
-                expect(credentials.idToken) == IDTokenFixtures.valid.signature.rs256
+                expect(credentials.idToken) == IDToken
                 expect(credentials.scope) == Scope
                 expect(credentials.expiresIn).to(beCloseTo(Date(timeIntervalSinceNow: expiresIn), within: 5))
             }

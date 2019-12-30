@@ -41,7 +41,6 @@ func codable<T: Codable>(from response: Response<AuthenticationError>, callback:
             let data = try JSONSerialization.data(withJSONObject: dictionary)
             let decoder = JSONDecoder()
             let decodedObject = try decoder.decode(T.self, from: data)
-            
             callback(.success(result: decodedObject))
         } else {
             callback(.failure(error: AuthenticationError(string: string(response.data))))

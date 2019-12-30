@@ -33,6 +33,7 @@ class OAuth2GrantSpec: QuickSpec {
         let domain = URL.a0_url("samples.auth0.com")
         let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
         let nonce = "a1b2c3d4e5"
+        let idToken = generateJWT().string
 
         describe("ImplicitGrant") {
 
@@ -74,7 +75,7 @@ class OAuth2GrantSpec: QuickSpec {
                 }
 
                 it("should build credentials") {
-                    let values = ["id_token": IDTokenFixtures.valid.signature.rs256]
+                    let values = ["id_token": idToken]
                     waitUntil { done in
                         implicit.credentials(from: values) {
                             expect($0).to(haveCredentials())
@@ -106,7 +107,7 @@ class OAuth2GrantSpec: QuickSpec {
 
                 it("should fail cause nonce does not match expected one") {
                     implicit = ImplicitGrant(authentication: authentication, responseType: [.idToken], nonce: "nomatch")
-                    let values = ["id_token": IDTokenFixtures.valid.signature.rs256]
+                    let values = ["id_token": idToken]
                     waitUntil { done in
                         implicit.credentials(from: values) {
                             expect($0).to(beFailure())
@@ -146,7 +147,7 @@ class OAuth2GrantSpec: QuickSpec {
                 let code = UUID().uuidString
                 let values = ["code": code]
                 stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in
-                    return authResponse(accessToken: token, idToken: IDTokenFixtures.valid.signature.rs256)
+                    return authResponse(accessToken: token, idToken: idToken)
                     
                 }.name = "Code Exchange Auth"
                 waitUntil { done in
@@ -214,8 +215,8 @@ class OAuth2GrantSpec: QuickSpec {
             it("shoud build credentials") {
                 let token = UUID().uuidString
                 let code = UUID().uuidString
-                let values = ["code": code, "id_token": IDTokenFixtures.valid.signature.rs256, "nonce": nonce]
-                stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in return authResponse(accessToken: token, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Code Exchange Auth"
+                let values = ["code": code, "id_token": idToken, "nonce": nonce]
+                stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in return authResponse(accessToken: token, idToken: idToken) }.name = "Code Exchange Auth"
                 stub(condition: isJWKSPath(domain.host!)) { _ in jwksResponse() }
                 waitUntil { done in
                     pkce.credentials(from: values) {
@@ -229,8 +230,8 @@ class OAuth2GrantSpec: QuickSpec {
                 pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response)
                 let token = UUID().uuidString
                 let code = UUID().uuidString
-                let values = ["code": code, "id_token" : IDTokenFixtures.valid.signature.rs256]
-                stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in return authResponse(accessToken: token, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Code Exchange Auth"
+                let values = ["code": code, "id_token": idToken]
+                stub(condition: isToken(domain.host!) && hasAtLeast(["code": code, "code_verifier": pkce.verifier, "grant_type": "authorization_code", "redirect_uri": pkce.redirectURL.absoluteString])) { _ in return authResponse(accessToken: token, idToken: idToken) }.name = "Code Exchange Auth"
                 waitUntil { done in
                     pkce.credentials(from: values) {
                         expect($0).to(beFailure())

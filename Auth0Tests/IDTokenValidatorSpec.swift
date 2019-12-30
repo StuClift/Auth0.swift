@@ -1,46 +1,41 @@
+// IDTokenValidatorSpec.swift
 //
-//  IDTokenValidatorSpec.swift
-//  Auth0
+// Copyright (c) 2019 Auth0 (http://auth0.com)
 //
-//  Created by Rita Zerrizuela on 02/12/2019.
-//  Copyright © 2019 Auth0. All rights reserved.
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 import Foundation
 import Quick
 import Nimble
-import OHHTTPStubs
-import JWTDecode
 
 @testable import Auth0
 
-struct IDTokenFixtures {
-    struct valid {
-        struct signature {
-            static let rs256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2Mn0.i_TYzZXqIMCUGC8F6gH9LvZXQoW0nZR4_nGKisKWVWlPY-y28odtQFekYfrYhjSm-c1-UAoQahUIhGT8UvwtH4so3SRgOyRHiMlm531CnJlL1ybP2ihC57AuQSb1Xt9x614a26UuoXUOuDrc7IVPyGWXGyWrakpMZIZ8YPBXZpjzOcKg9Z2jqg9n_RRSBzuskscXAEYORouQvHW__0nez8KSy3SCMYyohBlI5fscm3GpABFYnZMzNClrL47izbZ8KgdmKXNj-Ej2edTGyiX4-sj7g-momN2HcfJ7b7TeUzMqLGdfbi-fyGG6Fv7pmIglbTShgUip08ucNOTgD-bSOg"
-        }
-        
-        struct claims {}
-    }
+class IDTokenValidatorBaseSpec: QuickSpec {
+    let domain = "tokens-test.auth0.com"
+    let clientId = "tokens-test-123"
     
-    struct invalid {
-        struct format {
-            static let empty = ""
-            static let tooLong = "a.b.c.d.e"
-            static let tooShort = "a.b."
-            static let missingSignature = "a.b"
-        }
-        
-        struct signature {
-            static let rs256 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2Mn0.invalidsignature"
-            static let unsupportedAlgorithm = "eyJhbGciOiJub25lIiwia2lkIjoia2V5MTIzIn0.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2Mn0."
-        }
-        
-        struct claims {}
-    }
+    // Can't override the initWithInvocation: initializer, because NSInvocation is not available in Swift
+    lazy var authentication = Auth0.authentication(clientId: clientId, domain: domain)
+    lazy var validatorContext = IDTokenValidatorContext(domain: domain, clientId: clientId, jwksRequest: authentication.jwks())
 }
 
-class IDTokenValidatorSpec: QuickSpec {
+class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
     
     // Unit test cases
     //
@@ -93,25 +88,11 @@ class IDTokenValidatorSpec: QuickSpec {
     // max_age was included in the request and (auth_time + max_age + leeway) is NOT a date in the future -> fail
 
     override func spec() {
-        let domain = "tokens-test.auth0.com"
-        let clientId = "tokens-test-123"
-        let jwk = JWK(keyType: "RS",
-                      keyId: JWKKid,
-                      usage: nil,
-                      algorithm: "RS256",
-                      certUrl: nil,
-                      certThumbprint: nil,
-                      certChain: nil,
-                      rsaModulus: JWKRSAModulus,
-                      rsaExponent: JWKRSAExponent)
-        
-        let authentication = Auth0.authentication(clientId: clientId, domain: domain)
-        let validatorContext = IDTokenValidatorContext(domain: domain, clientId: clientId, jwksRequest: authentication.jwks())
+        let validatorContext = self.validatorContext
+        let mockSignatureValidator = MockIDTokenSignatureValidator()
+        let mockClaimsValidator = MockIDTokenClaimsValidator()
         
         describe("sanity checks") {
-            let mockSignatureValidator = MockIDTokenSignatureValidator()
-            let mockClaimsValidator = MockIDTokenClaimsValidator()
-            
             it("should fail to validate a nil id token") {
                 waitUntil { done in
                     validate(idToken: nil,
@@ -126,7 +107,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an empty id token") {
                 waitUntil { done in
-                    validate(idToken: IDTokenFixtures.invalid.format.empty,
+                    validate(idToken: "",
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -138,7 +119,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode a malformed id token") {
                 waitUntil { done in
-                    validate(idToken: IDTokenFixtures.invalid.format.tooLong,
+                    validate(idToken: "a.b.c.d.e",
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -148,7 +129,7 @@ class IDTokenValidatorSpec: QuickSpec {
                 }
                 
                 waitUntil { done in
-                    validate(idToken: IDTokenFixtures.invalid.format.tooShort,
+                    validate(idToken: "a.b.",
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -160,7 +141,7 @@ class IDTokenValidatorSpec: QuickSpec {
             
             it("should fail to decode an id token that's missing the signature") {
                 waitUntil { done in
-                    validate(idToken: IDTokenFixtures.invalid.format.missingSignature,
+                    validate(idToken: "a.b",
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
@@ -170,102 +151,6 @@ class IDTokenValidatorSpec: QuickSpec {
                 }
             }
         }
-        
-        describe("signature validation") {
-            let signatureValidator = IDTokenSignatureValidator(context: validatorContext)
-            
-            context("algorithm support") {
-                it("should support RSA256") {
-                    let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
-                    
-                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
-                    
-                    waitUntil { done in
-                        signatureValidator.validate(jwt) { error in
-                            expect(error).to(beNil())
-                            done()
-                        }
-                    }
-                }
-
-                it("should not support other algorithms") {
-                    let jwt = try! decode(jwt: IDTokenFixtures.invalid.signature.unsupportedAlgorithm)
-                    
-                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
-                    
-                    waitUntil { done in
-                        signatureValidator.validate(jwt) { error in
-                            let expectedError = IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")
-                            
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
-                            done()
-                        }
-                    }
-                }
-            }
-            
-            context("kid validation") {
-                let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
-                let expectedError = IDTokenSignatureValidator.ValidationError.missingPublicKey(kid: "")
-                
-                it("should fail if the kid is not present") {
-                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse(kid: nil) }
-                    
-                    waitUntil { done in
-                        signatureValidator.validate(jwt) { error in
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
-                            done()
-                        }
-                    }
-                }
-                
-                it("should fail if the kid does not match") {
-                    stub(condition: isJWKSPath(domain)) { _ in jwksResponse(kid: "abc123") }
-                    
-                    waitUntil { done in
-                        signatureValidator.validate(jwt) { error in
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
-                            done()
-                        }
-                    }
-                }
-                
-                it("should fail if the keys cannot be retrieved") {
-                    stub(condition: isJWKSPath(domain)) { _ in jwksErrorResponse() }
-                    
-                    waitUntil { done in
-                        signatureValidator.validate(jwt) { error in                            
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
-                            done()
-                        }
-                    }
-                }
-            }
-            
-            it("should pass with a correct RS256 signature") {
-                let jwt = try! decode(jwt: IDTokenFixtures.valid.signature.rs256)
-                
-                expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beTrue())
-            }
-            
-            it("should fail with an incorrect RS256 signature") {
-                let jwt = try! decode(jwt: IDTokenFixtures.invalid.signature.rs256)
-
-                expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beFalse())
-            }
-        }
     }
     
-}
-
-class MockIDTokenSignatureValidator: JWTSignatureValidator {
-    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void) {
-        callback(nil)
-    }
-}
-
-class MockIDTokenClaimsValidator: JWTClaimsValidator {
-    func validate(_ jwt: JWT) -> LocalizedError? {
-        return nil
-    }
 }

@@ -34,6 +34,7 @@ private let ValidPassword = "I.O.U. a password"
 private let InvalidPassword = "InvalidPassword"
 private let ConnectionName = "Username-Password-Authentication"
 private let AccessToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+private let IDToken = generateJWT().string
 private let FacebookToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 private let InvalidFacebookToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 private let Timeout: TimeInterval = 2
@@ -56,7 +57,7 @@ class AuthenticationSpec: QuickSpec {
         describe("login") {
 
             beforeEach {
-                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "OpenID Auth"
+                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "OpenID Auth"
                 stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword]) && hasNoneOf(["scope": "openid"])) { _ in return authResponse(accessToken: AccessToken) }.name = "Custom Scope Auth"
                 stub(condition: isResourceOwner(Domain) && hasAtLeast(["password": InvalidPassword])) { _ in return OHHTTPStubsResponse.init(error: NSError(domain: "com.auth0", code: -99999, userInfo: nil)) }.name = "Not Authorized"
             }
@@ -82,7 +83,7 @@ class AuthenticationSpec: QuickSpec {
             it("should have both token when scope is 'openid'") {
                 waitUntil(timeout: Timeout) { done in
                     auth.login(usernameOrEmail: SupportAtAuth0, password: ValidPassword, connection: ConnectionName, scope: "openid").start { result in
-                        expect(result).to(haveCredentials(AccessToken, IDTokenFixtures.valid.signature.rs256))
+                        expect(result).to(haveCredentials(AccessToken, IDToken))
                         done()
                     }
                 }
@@ -143,7 +144,7 @@ class AuthenticationSpec: QuickSpec {
         describe("login MFA") {
 
             beforeEach {
-                stub(condition: isToken(Domain) && hasAtLeast(["otp":OTP, "mfa_token": MFAToken])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "OpenID Auth"
+                stub(condition: isToken(Domain) && hasAtLeast(["otp":OTP, "mfa_token": MFAToken])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "OpenID Auth"
                 stub(condition: isToken(Domain) && hasAtLeast(["otp":"bad_otp", "mfa_token": MFAToken])) { _ in return authFailure(code: "invalid_grant", description: "Invalid otp_code.") }.name = "invalid otp"
                 stub(condition: isToken(Domain) && hasAtLeast(["otp":OTP, "mfa_token": "bad_token"])) { _ in return authFailure(code: "invalid_grant", description: "Malformed mfa_token") }.name = "invalid mfa_token"
             }
@@ -225,14 +226,14 @@ class AuthenticationSpec: QuickSpec {
                     "subject_token": "VALIDCODE",
                     "subject_token_type": "http://auth0.com/oauth/token-type/apple-authz-code",
                     "scope": "openid profile offline_access"
-                    ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Token Exchange Apple Success"
+                    ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Token Exchange Apple Success"
                 
                 stub(condition: isToken(Domain) && hasAtLeast([
                     "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                     "subject_token": "VALIDCODE",
                     "subject_token_type": "http://auth0.com/oauth/token-type/apple-authz-code",
                     "scope": "openid email"
-                    ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Token Exchange Apple Success with custom scope"
+                    ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Token Exchange Apple Success with custom scope"
                 
                 stub(condition: isToken(Domain) && hasAtLeast([
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
@@ -240,28 +241,28 @@ class AuthenticationSpec: QuickSpec {
                 "subject_token_type": "http://auth0.com/oauth/token-type/apple-authz-code",
                 "scope": "openid email",
                 "audience": "https://myapi.com/api"
-                ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Token Exchange Apple Success with custom scope and audience"
+                ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Token Exchange Apple Success with custom scope and audience"
                 
                 stub(condition: isToken(Domain) && hasAtLeast([
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "subject_token": "VALIDNAMECODE",
                 "subject_token_type": "http://auth0.com/oauth/token-type/apple-authz-code"]) &&
                 (hasAtLeast(["user_profile": "{\"name\":{\"lastName\":\"Smith\",\"firstName\":\"John\"}}" ]) || hasAtLeast(["user_profile": "{\"name\":{\"firstName\":\"John\",\"lastName\":\"Smith\"}}" ]))
-                ) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Token Exchange Apple Success with user profile"
+                ) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Token Exchange Apple Success with user profile"
                 
                 stub(condition: isToken(Domain) && hasAtLeast([
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "subject_token": "VALIDPARTIALNAMECODE",
                 "subject_token_type": "http://auth0.com/oauth/token-type/apple-authz-code",
                 "user_profile": "{\"name\":{\"firstName\":\"John\"}}"
-                ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Token Exchange Apple Success with partial user profile"
+                ])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Token Exchange Apple Success with partial user profile"
                 
                 stub(condition: isToken(Domain) && hasAtLeast([
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "subject_token": "VALIDMISSINGNAMECODE",
                 "subject_token_type": "http://auth0.com/oauth/token-type/apple-authz-code"]) &&
                 hasNoneOf(["user_profile"])
-                ) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Token Exchange Apple Success with missing user profile"
+                ) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Token Exchange Apple Success with missing user profile"
                 
             }
 
@@ -708,10 +709,10 @@ class AuthenticationSpec: QuickSpec {
 
             it("should create user and login") {
                 stub(condition: isSignUp(Domain) && hasAllOf(["email": SupportAtAuth0, "password": ValidPassword, "connection": ConnectionName, "client_id": ClientId])) { _ in return createdUser(email: SupportAtAuth0) }.name = "User w/email"
-                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "OpenID Auth"
+                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "OpenID Auth"
                 waitUntil(timeout: Timeout) { done in
                     auth.signUp(email: SupportAtAuth0, password: ValidPassword, connection: ConnectionName).start { result in
-                        expect(result).to(haveCredentials(AccessToken, IDTokenFixtures.valid.signature.rs256))
+                        expect(result).to(haveCredentials(AccessToken, IDToken))
                         done()
                     }
                 }
@@ -720,10 +721,10 @@ class AuthenticationSpec: QuickSpec {
             it("should login with custom parameters") {
                 let state = UUID().uuidString.replacingOccurrences(of: "-", with: "")
                 stub(condition: isSignUp(Domain) && hasAllOf(["email": SupportAtAuth0, "password": ValidPassword, "connection": ConnectionName, "client_id": ClientId])) { _ in return createdUser(email: SupportAtAuth0) }.name = "User w/email"
-                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid", "state": state])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "OpenID Auth"
+                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid", "state": state])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "OpenID Auth"
                 waitUntil(timeout: Timeout) { done in
                     auth.signUp(email: SupportAtAuth0, password: ValidPassword, connection: ConnectionName, parameters: ["state": state]).start { result in
-                        expect(result).to(haveCredentials(AccessToken, IDTokenFixtures.valid.signature.rs256))
+                        expect(result).to(haveCredentials(AccessToken, IDToken))
                         done()
                     }
                 }
@@ -733,10 +734,10 @@ class AuthenticationSpec: QuickSpec {
                 let country = "Argentina"
                 let metadata = ["country": country]
                 stub(condition: isSignUp(Domain) && hasUserMetadata(metadata)) { _ in return createdUser(email: SupportAtAuth0) }.name = "User w/email"
-                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "OpenID Auth"
+                stub(condition: isResourceOwner(Domain) && hasAtLeast(["username":SupportAtAuth0, "password": ValidPassword, "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "OpenID Auth"
                 waitUntil(timeout: Timeout) { done in
                     auth.signUp(email: SupportAtAuth0, password: ValidPassword, connection: ConnectionName, userMetadata: metadata).start { result in
-                        expect(result).to(haveCredentials(AccessToken, IDTokenFixtures.valid.signature.rs256))
+                        expect(result).to(haveCredentials(AccessToken, IDToken))
                         done()
                     }
                 }
@@ -845,9 +846,9 @@ class AuthenticationSpec: QuickSpec {
         describe("user information") {
 
             it("should return token information") {
-                stub(condition: isTokenInfo(Domain) && hasAllOf(["id_token": IDTokenFixtures.valid.signature.rs256])) { _ in return tokenInfo() }.name = "token info"
+                stub(condition: isTokenInfo(Domain) && hasAllOf(["id_token": IDToken])) { _ in return tokenInfo() }.name = "token info"
                 waitUntil(timeout: Timeout) { done in
-                    auth.tokenInfo(token: IDTokenFixtures.valid.signature.rs256).start { result in
+                    auth.tokenInfo(token: IDToken).start { result in
                         expect(result).to(haveProfile(UserId))
                         done()
                     }
@@ -857,7 +858,7 @@ class AuthenticationSpec: QuickSpec {
             it("should report failure to get token info") {
                 stub(condition: isTokenInfo(Domain)) { _ in return authFailure(error: "invalid_token", description: "the token is invalid") }.name = "token info failed"
                 waitUntil(timeout: Timeout) { done in
-                    auth.tokenInfo(token: IDTokenFixtures.valid.signature.rs256).start { result in
+                    auth.tokenInfo(token: IDToken).start { result in
                         expect(result).to(haveAuthenticationError(code: "invalid_token", description: "the token is invalid"))
                         done()
                     }
@@ -877,7 +878,7 @@ class AuthenticationSpec: QuickSpec {
             it("should report failure to get user info") {
                 stub(condition: isUserInfo(Domain)) { _ in return authFailure(error: "invalid_token", description: "the token is invalid") }.name = "token info failed"
                 waitUntil(timeout: Timeout) { done in
-                    auth.userInfo(token: IDTokenFixtures.valid.signature.rs256).start { result in
+                    auth.userInfo(token: IDToken).start { result in
                         expect(result).to(haveAuthenticationError(code: "invalid_token", description: "the token is invalid"))
                         done()
                     }
@@ -913,7 +914,7 @@ class AuthenticationSpec: QuickSpec {
         describe("social login") {
 
             beforeEach {
-                stub(condition: isOAuthAccessToken(Domain) && hasAtLeast(["access_token":FacebookToken, "connection": "facebook", "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Facebook Auth OpenID"
+                stub(condition: isOAuthAccessToken(Domain) && hasAtLeast(["access_token":FacebookToken, "connection": "facebook", "scope": "openid"])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Facebook Auth OpenID"
                 stub(condition: isOAuthAccessToken(Domain) && hasAtLeast(["access_token":FacebookToken, "connection": "facebook"]) && hasNoneOf(["scope": "openid"])) { _ in return authResponse(accessToken: AccessToken) }.name = "Custom Scope Facebook Auth"
                 stub(condition: isOAuthAccessToken(Domain) && hasAtLeast(["access_token": InvalidFacebookToken])) { _ in return OHHTTPStubsResponse.init(error: NSError(domain: "com.auth0", code: -99999, userInfo: nil)) }.name = "Not Authorized"
             }
@@ -939,7 +940,7 @@ class AuthenticationSpec: QuickSpec {
             it("should have both token when scope is 'openid'") {
                 waitUntil(timeout: Timeout) { done in
                     auth.loginSocial(token: FacebookToken, connection: "facebook", scope: "openid").start { result in
-                        expect(result).to(haveCredentials(AccessToken, IDTokenFixtures.valid.signature.rs256))
+                        expect(result).to(haveCredentials(AccessToken, IDToken))
                         done()
                     }
                 }
@@ -1010,10 +1011,10 @@ class AuthenticationSpec: QuickSpec {
 
 
             it("should exchange code for tokens") {
-                stub(condition: isToken(Domain) && hasAtLeast(["code": code, "code_verifier": codeVerifier, "grant_type": "authorization_code", "redirect_uri": redirectURI])) { _ in return authResponse(accessToken: AccessToken, idToken: IDTokenFixtures.valid.signature.rs256) }.name = "Code Exchange Auth"
+                stub(condition: isToken(Domain) && hasAtLeast(["code": code, "code_verifier": codeVerifier, "grant_type": "authorization_code", "redirect_uri": redirectURI])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken) }.name = "Code Exchange Auth"
                 waitUntil(timeout: Timeout) { done in
                     auth.tokenExchange(withCode: code, codeVerifier: codeVerifier, redirectURI: redirectURI).start { result in
-                        expect(result).to(haveCredentials(AccessToken, IDTokenFixtures.valid.signature.rs256))
+                        expect(result).to(haveCredentials(AccessToken, IDToken))
                         done()
                     }
                 }

@@ -32,6 +32,8 @@ import LocalAuthentication
 
 private let AccessToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 private let NewAccessToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+private let IDToken = generateJWT().string
+private let NewIdToken = generateJWT(nonce: "abc123456").string
 private let TokenType = "bearer"
 private let RefreshToken = UUID().uuidString.replacingOccurrences(of: "-", with: "")
 private let ExpiresIn: TimeInterval = 3600
@@ -39,7 +41,6 @@ private let ClientId = "CLIENT_ID"
 private let Domain = "samples.auth0.com"
 private let ExpiredToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJpYXQiOjE1NzE4NTI0NjMsImV4cCI6MTU0MDIzMDA2MywiYXVkIjoiYXVkaWVuY2UiLCJzdWIiOiIxMjM0NSJ9.Lcz79P1AFAZDI4Yr1teFapFVAmBbdfhGBGbj9dQVeRM"
 private let ValidToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ0ZXN0IiwiaWF0IjoxNTcxOTExNTkyLCJleHAiOjE5MTg5ODAzOTIsImF1ZCI6ImF1ZGllbmNlIiwic3ViIjoic3VifDEyMyJ9.uLNF8IpY6cJTY-RyO3CcqLpCaKGaVekR-DTDoQTlnPk" // Token is valid until 2030
-private let NewIdToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleTEyMyJ9.eyJpc3MiOiJodHRwczovL3Rva2Vucy10ZXN0LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHwxMjM0NTY3ODkiLCJhdWQiOlsidG9rZW5zLXRlc3QtMTIzIiwiZXh0ZXJuYWwtdGVzdC05OTkiXSwiZXhwIjoxNTc2NzgxNjYyLCJpYXQiOjE1NzY2MDg4NjIsIm5vbmNlIjoiYTFiMmMzZDRlNSIsImF6cCI6InRva2Vucy10ZXN0LTEyMyIsImF1dGhfdGltZSI6MTU3NjY5NTI2MiwiZXh0cmFfY2xhaW0iOiJoZWxsby13b3JsZCJ9.Mj1TBL5mqBbdCtHupttuCAL-BovfxXtm8NM3z0JrSQ4MjXwB9DJvzDWsb1jOSXdeTGymrWjBWrs4GBzZdiFlKl1n1ZP-uyiWrNY1OEiJuo1a0v7po66-F18j7uEhfOMr8tdWSIJkY38k79TJdnsJvrJooevqeIdGlFy3g0ohnVpUJ_5KdhSV7rKd9F4tnnP--fu0TCACg8DVvr_FAkMlnbiyJGr7ZNi4YRn_VermaLAJbI8c752EME0-oYy1pEOYLeCJntSPe_eLbeL-WmVnhpZJSPDexTWAxe1KCJzajK5XRnSLQype-OmFBnAo9Cle2yfIMJTl2dA3bwdk2OkgRw"
 
 class CredentialsManagerSpec: QuickSpec {
 
@@ -51,7 +52,7 @@ class CredentialsManagerSpec: QuickSpec {
 
         beforeEach {
             credentialsManager = CredentialsManager(authentication: authentication)
-            credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: ExpiresIn))
+            credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: ExpiresIn))
         }
 
         describe("storage") {
@@ -111,7 +112,7 @@ class CredentialsManagerSpec: QuickSpec {
             it("should not return an error if there is no refresh token, and clear credentials anyway") {
                 let credentials = Credentials(
                     accessToken: AccessToken,
-                    idToken: IDTokenFixtures.valid.signature.rs256,
+                    idToken: IDToken,
                     expiresIn: Date(timeIntervalSinceNow: ExpiresIn)
                     )
                 
@@ -152,8 +153,6 @@ class CredentialsManagerSpec: QuickSpec {
             beforeEach {
                 secondaryCredentialsManager = CredentialsManager(authentication: authentication, storeKey: "secondary_store")
                 secondaryCredentials = Credentials(accessToken: "SecondaryAccessToken", tokenType: TokenType, idToken: "SecondaryIdToken", refreshToken: "SecondaryRefreshToken", expiresIn: Date(timeIntervalSinceNow: ExpiresIn))
-
-                stub(condition: isToken(Domain) && hasAtLeast(["refresh_token": RefreshToken])) { _ in return authResponse(accessToken: NewAccessToken, idToken: NewIdToken, expiresIn: 86400) }.name = "renew success"
             }
             
             afterEach {
@@ -162,6 +161,8 @@ class CredentialsManagerSpec: QuickSpec {
             }
             
             it("should store credentials into distinct locations") {
+                stub(condition: isToken(Domain) && hasAtLeast(["refresh_token": RefreshToken])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken, expiresIn: 86400) }
+                
                 expect(credentialsManager.store(credentials: credentials)).to(beTrue())
                 expect(secondaryCredentialsManager.store(credentials: secondaryCredentials)).to(beTrue())
                                 
@@ -170,7 +171,7 @@ class CredentialsManagerSpec: QuickSpec {
                         expect($0).to(beNil())
                         expect($1!.accessToken) == AccessToken
                         expect($1!.refreshToken) == RefreshToken
-                        expect($1!.idToken) == IDTokenFixtures.valid.signature.rs256
+                        expect($1!.idToken) == IDToken
                         done()
                     }
                 }
@@ -188,13 +189,16 @@ class CredentialsManagerSpec: QuickSpec {
             }
             
             it("should store new credentials") {
-                credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
+                credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
                 _ = credentialsManager.store(credentials: credentials)
             }
             
             it("should share a space in the keychain if using the same store key") {
                 
                 credentialsManager = CredentialsManager(authentication: authentication, storeKey: "secondary_store")
+                
+                stub(condition: isJWKSPath(Domain)) { _ in jwksResponse() }
+                stub(condition: isToken(Domain) && hasAtLeast(["refresh_token": RefreshToken])) { _ in return authResponse(accessToken: AccessToken, idToken: IDToken, expiresIn: 86400) }
                 
                 expect(credentialsManager.store(credentials: credentials)).to(beTrue())
                 
@@ -203,7 +207,7 @@ class CredentialsManagerSpec: QuickSpec {
                         expect($0).to(beNil())
                         expect($1!.accessToken) == AccessToken
                         expect($1!.refreshToken) == RefreshToken
-                        expect($1!.idToken) == IDTokenFixtures.valid.signature.rs256
+                        expect($1!.idToken) == IDToken
                         done()
                     }
                 }
@@ -213,7 +217,7 @@ class CredentialsManagerSpec: QuickSpec {
                         expect($0).to(beNil())
                         expect($1!.accessToken) == AccessToken
                         expect($1!.refreshToken) == RefreshToken
-                        expect($1!.idToken) == IDTokenFixtures.valid.signature.rs256
+                        expect($1!.idToken) == IDToken
                         done()
                     }
                 }
@@ -238,25 +242,25 @@ class CredentialsManagerSpec: QuickSpec {
             }
 
             it("should have valid credentials when token valid and no refresh token present") {
-                let credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: nil, expiresIn: Date(timeIntervalSinceNow: ExpiresIn))
+                let credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: nil, expiresIn: Date().addingTimeInterval(100000))
                 expect(credentialsManager.store(credentials: credentials)).to(beTrue())
                 expect(credentialsManager.hasValid()).to(beTrue())
             }
 
             it("should have valid credentials when token expired and refresh token present") {
-                let credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
+                let credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
                 expect(credentialsManager.store(credentials: credentials)).to(beTrue())
                 expect(credentialsManager.hasValid()).to(beTrue())
             }
 
             it("should not have valid credentials when token expired and no refresh token present") {
-                let credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: nil, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
+                let credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: nil, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
                 expect(credentialsManager.store(credentials: credentials)).to(beTrue())
                 expect(credentialsManager.hasValid()).to(beFalse())
             }
 
             it("should not have valid credentials when no access token") {
-                let credentials = Credentials(accessToken: nil, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: ExpiresIn))
+                let credentials = Credentials(accessToken: nil, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: ExpiresIn))
                 expect(credentialsManager.store(credentials: credentials)).to(beTrue())
                 expect(credentialsManager.hasValid()).to(beFalse())
             }
@@ -333,7 +337,7 @@ class CredentialsManagerSpec: QuickSpec {
             }
 
             it("should error when token expired") {
-                credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: nil, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
+                credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: nil, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
                 _ = credentialsManager.store(credentials: credentials)
                 credentialsManager.credentials { error = $0; newCredentials = $1 }
                 expect(error).to(matchError(CredentialsManagerError.noCredentials))
@@ -341,7 +345,7 @@ class CredentialsManagerSpec: QuickSpec {
             }
 
             it("should error when expiry not present") {
-                credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: nil)
+                credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: nil)
                 _ = credentialsManager.store(credentials: credentials)
                 credentialsManager.credentials { error = $0; newCredentials = $1 }
                 expect(error).to(matchError(CredentialsManagerError.noCredentials))
@@ -363,7 +367,7 @@ class CredentialsManagerSpec: QuickSpec {
                 }
 
                 it("should error when touch unavailable") {
-                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
+                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
                     _ = credentialsManager.store(credentials: credentials)
 
                     waitUntil(timeout: 2) { done in
@@ -384,7 +388,7 @@ class CredentialsManagerSpec: QuickSpec {
                 }
 
                 it("should yield new credentials, maintain refresh token") {
-                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
+                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
                     _ = credentialsManager.store(credentials: credentials)
                     
                     stub(condition: isToken(Domain) && hasAtLeast(["refresh_token": RefreshToken])) { _ in return authResponse(accessToken: NewAccessToken, idToken: NewIdToken, expiresIn: 86400) }.name = "renew success"
@@ -415,7 +419,7 @@ class CredentialsManagerSpec: QuickSpec {
                 }
 
                 it("should store new credentials") {
-                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
+                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
                     _ = credentialsManager.store(credentials: credentials)
                     waitUntil(timeout: 2) { done in
                         credentialsManager.credentials { error = $0; newCredentials = $1
@@ -432,7 +436,7 @@ class CredentialsManagerSpec: QuickSpec {
 
                 it("should yield error on failed renew") {
                     stub(condition: isToken(Domain) && hasAtLeast(["refresh_token": RefreshToken])) { _ in return authFailure(code: "invalid_request", description: "missing_params") }.name = "renew failed"
-                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDTokenFixtures.valid.signature.rs256, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
+                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IDToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -3600))
                     _ = credentialsManager.store(credentials: credentials)
                     waitUntil(timeout: 2) { done in
                         credentialsManager.credentials { error = $0; newCredentials = $1

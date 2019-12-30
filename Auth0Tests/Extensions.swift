@@ -1,4 +1,4 @@
-// Array+Encode.swift
+// Extensions.swift
 //
 // Copyright (c) 2019 Auth0 (http://auth0.com)
 //
@@ -21,20 +21,24 @@
 // THE SOFTWARE.
 
 import Foundation
+import Security
 
-extension Array where Element == UInt8 {
-    func a0_derEncode(as dataType: UInt8) -> [UInt8] {
-        var encodedBytes: [UInt8] = [dataType]
-        var numberOfBytes = count
-        if numberOfBytes < 128 {
-            encodedBytes.append(UInt8(numberOfBytes))
-        } else {
-            let lengthData = Data(bytes: &numberOfBytes, count: MemoryLayout.size(ofValue: numberOfBytes))
-            let lengthBytes = [UInt8](lengthData).filter({ $0 != 0 }).reversed()
-            encodedBytes.append(UInt8(truncatingIfNeeded: lengthBytes.count) | 0b10000000)
-            encodedBytes.append(contentsOf: lengthBytes)
+@testable import Auth0
+
+extension SecKey {
+    func export() -> Data {
+        return SecKeyCopyExternalRepresentation(self, nil)! as Data
+    }
+}
+
+extension JWTAlgorithm {
+    func sign(value: Data, key: SecKey = TestKeys.rsaPrivate) -> Data {
+        switch self {
+        case .rs256:
+            let sha256 = A0SHA(algorithm: "sha256")!
+            let rsa = A0RSA(key: key)!
+            
+            return rsa.sign(sha256.hash(value))
         }
-        encodedBytes.append(contentsOf: self)
-        return encodedBytes
     }
 }
