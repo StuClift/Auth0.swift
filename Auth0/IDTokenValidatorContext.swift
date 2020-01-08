@@ -1,6 +1,6 @@
-// IDTokenValidatorMocks.swift
+// IDTokenValidatorContext.swift
 //
-// Copyright (c) 2019 Auth0 (http://auth0.com)
+// Copyright (c) 2020 Auth0 (http://auth0.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,38 @@
 // THE SOFTWARE.
 
 import Foundation
-import JWTDecode
 
-@testable import Auth0
-
-class MockIDTokenSignatureValidator: JWTSignatureValidator {
-    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void) {
-        callback(nil)
+struct IDTokenValidatorContext: IDTokenSignatureContext, IDTokenClaimsContext {
+    let domain: String
+    let clientId: String
+    let jwksRequest: Request<JWKS, AuthenticationError>
+    let nonce: String?
+    let leeway: Int
+    let maxAge: Int?
+    
+    init(domain: String,
+         clientId: String,
+         jwksRequest: Request<JWKS, AuthenticationError>,
+         nonce: String?,
+         leeway: Int,
+         maxAge: Int?) {
+        self.domain = domain
+        self.clientId = clientId
+        self.jwksRequest = jwksRequest
+        self.nonce = nonce
+        self.leeway = leeway
+        self.maxAge = maxAge
+    }
+    
+    init(authentication: Authentication,
+         nonce: String?,
+         leeway: Int,
+         maxAge: Int?) {
+        self.domain = authentication.url.host!
+        self.clientId = authentication.clientId
+        self.jwksRequest = authentication.jwks()
+        self.nonce = nonce
+        self.leeway = leeway
+        self.maxAge = maxAge
     }
 }
-
-class MockIDTokenClaimsValidator: JWTClaimValidator {
-    func validate(_ jwt: JWT) -> LocalizedError? {
-        return nil
-    }
-}
-

@@ -23,13 +23,23 @@
 import Foundation
 import JWTDecode
 
-class IDTokenValidator {
+protocol JWTSignatureValidator {
+    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void)
+}
+
+protocol JWTClaimValidator {
+    func validate(_ jwt: JWT) -> LocalizedError?
+}
+
+final class IDTokenValidator {
+    static let defaultLeeway: Int = 60 * 1000 // Default leeway is 60 seconds
+    
     private let signatureValidator: JWTSignatureValidator
-    private let claimsValidator: JWTClaimsValidator
+    private let claimsValidator: JWTClaimValidator
     private let context: IDTokenValidatorContext
     
     init(signatureValidator: JWTSignatureValidator,
-         claimsValidator: JWTClaimsValidator,
+         claimsValidator: JWTClaimValidator,
          context: IDTokenValidatorContext) {
         self.signatureValidator = signatureValidator
         self.claimsValidator = claimsValidator
@@ -38,111 +48,13 @@ class IDTokenValidator {
 
     func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void) {
         signatureValidator.validate(jwt) { error in
-            if let error = error {
-                return callback(error)
-            }
+            if let error = error { return callback(error) }
             callback(self.claimsValidator.validate(jwt))
         }
     }
 }
 
-protocol JWTSignatureValidator {
-    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void)
-}
-
-protocol JWTClaimsValidator {
-    func validate(_ jwt: JWT) -> LocalizedError?
-}
-
-enum JWTAlgorithm: String {
-    case rs256 = "RS256"
-    
-    func verify(_ jwt: JWT, using jwk: JWK) -> Bool {
-        switch self {
-        case .rs256:
-            let separator = "."
-            let parts = jwt.string.components(separatedBy: separator).dropLast().joined(separator: separator)
-            guard let data = parts.data(using: .utf8),
-                let signature = jwt.signature?.a0_decodeBase64URLSafe(),
-                let publicKey = jwk.rsaPublicKey,
-                let sha256 = A0SHA(algorithm: "sha256"),
-                let rsa = A0RSA(key: publicKey) else {
-                    return false
-            }
-            return rsa.verify(sha256.hash(data), signature: signature)
-        }
-    }
-}
-
-class IDTokenClaimsValidator: JWTClaimsValidator {
-    private let context: IDTokenValidatorContext
-    
-    init(context: IDTokenValidatorContext) {
-        self.context = context
-    }
-    
-    func validate(_ jwt: JWT) -> LocalizedError? {
-        return nil
-    }
-}
-
-class IDTokenSignatureValidator: JWTSignatureValidator {
-    enum ValidationError: LocalizedError, Equatable {
-        case invalidAlgorithm(actual: String, expected: String)
-        case missingPublicKey(kid: String)
-        case invalidSignature
-        
-        var errorDescription: String? {
-            switch self {
-            case .invalidAlgorithm(let actual, let expected): return "Signature algorithm of \"\(actual)\" is not supported. Expected the ID token to be signed with \"\(expected)\""
-            case .missingPublicKey(let kid): return "Could not find a public key for Key ID (kid) \"\(kid)\""
-            case .invalidSignature: return "Invalid ID token signature"
-            }
-        }
-        
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.invalidAlgorithm, .invalidAlgorithm): return true
-            case (.missingPublicKey, .missingPublicKey): return true
-            case (.invalidSignature, .invalidSignature): return true
-            default: return false
-            }
-        }
-    }
-    
-    private let context: IDTokenValidatorContext
-    
-    init(context: IDTokenValidatorContext) {
-        self.context = context
-    }
-    
-    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void) {
-        let defaultAlgorithm = JWTAlgorithm.rs256.rawValue
-        let algValue = jwt.header["alg"] as? String
-        guard let alg = algValue, let algorithm = JWTAlgorithm(rawValue: alg) else {
-            return callback(ValidationError.invalidAlgorithm(actual: algValue.debugDescription, expected: defaultAlgorithm))
-        }
-        let kidValue = jwt.header["kid"] as? String
-        guard let kid = kidValue else {
-            return callback(ValidationError.missingPublicKey(kid: kidValue.debugDescription))
-        }
-        context
-            .jwksRequest
-            .start { result in
-                switch result {
-                case .success(let jwks):
-                    guard let jwk = jwks.key(id: kid) else {
-                        callback(ValidationError.missingPublicKey(kid: kid))
-                        return
-                    }
-                    algorithm.verify(jwt, using: jwk) ? callback(nil) : callback(ValidationError.invalidSignature)
-                case .failure: callback(ValidationError.missingPublicKey(kid: kid))
-                }
-        }
-    }
-}
-
-enum IDTokenValidationError: LocalizedError, Equatable {
+enum IDTokenDecodingError: LocalizedError, Equatable {
     case missingToken
     case cannotDecode
     
@@ -153,7 +65,7 @@ enum IDTokenValidationError: LocalizedError, Equatable {
         }
     }
     
-    public static func == (lhs: IDTokenValidationError, rhs: IDTokenValidationError) -> Bool {
+    public static func == (lhs: IDTokenDecodingError, rhs: IDTokenDecodingError) -> Bool {
         switch (lhs, rhs) {
         case (.missingToken, .missingToken): return true
         case (.cannotDecode, .cannotDecode): return true
@@ -162,25 +74,33 @@ enum IDTokenValidationError: LocalizedError, Equatable {
     }
 }
 
-struct IDTokenValidatorContext {
-    let domain: String
-    let clientId: String
-    let jwksRequest: Request<JWKS, AuthenticationError>
-}
-
 func validate(idToken: String?,
               context: IDTokenValidatorContext,
               signatureValidator: JWTSignatureValidator? = nil, // for testing
-              claimsValidator: JWTClaimsValidator? = nil,
+              claimsValidator: JWTClaimValidator? = nil,
               callback: @escaping (LocalizedError?) -> Void) {
     guard let idToken = idToken else {
-        return callback(IDTokenValidationError.missingToken)
+        return callback(IDTokenDecodingError.missingToken)
     }
     guard let jwt = try? decode(jwt: idToken) else {
-        return callback(IDTokenValidationError.cannotDecode)
+        return callback(IDTokenDecodingError.cannotDecode)
+    }
+    var claimsValidators: [JWTClaimValidator] = [IDTokenIssValidator(domain: context.domain),
+                                                 IDTokenSubValidator(),
+                                                 IDTokenAudValidator(clientId: context.clientId),
+                                                 IDTokenExpValidator(leeway: context.leeway),
+                                                 IDTokenIatValidator()]
+    if let nonce = context.nonce {
+        claimsValidators.append(IDTokenNonceValidator(nonce: nonce))
+    }
+    if let aud = jwt.audience, aud.count > 1 {
+        claimsValidators.append(IDTokenAzpValidator(clientId: context.clientId))
+    }
+    if let maxAge = context.maxAge {
+        claimsValidators.append(IDTokenAuthTimeValidator(leeway: context.leeway, maxAge: maxAge))
     }
     let validator = IDTokenValidator(signatureValidator: signatureValidator ?? IDTokenSignatureValidator(context: context),
-                                     claimsValidator: claimsValidator ?? IDTokenClaimsValidator(context: context),
+                                     claimsValidator: claimsValidator ?? IDTokenClaimsValidator(validators: claimsValidators),
                                      context: context)
     validator.validate(jwt, callback: callback)
 }

@@ -34,10 +34,18 @@ struct ImplicitGrant: OAuth2Grant {
     let authentication: Authentication
     let defaults: [String: String]
     let responseType: [ResponseType]
+    let leeway: Int
+    let maxAge: Int?
 
-    init(authentication: Authentication, responseType: [ResponseType] = [.token], nonce: String? = nil) {
+    init(authentication: Authentication,
+         responseType: [ResponseType] = [.token],
+         nonce: String? = nil,
+         leeway: Int,
+         maxAge: Int? = nil) {
         self.authentication = authentication
         self.responseType = responseType
+        self.leeway = leeway
+        self.maxAge = maxAge
         if let nonce = nonce {
             self.defaults = ["nonce": nonce]
         } else {
@@ -49,11 +57,11 @@ struct ImplicitGrant: OAuth2Grant {
         let responseType = self.responseType
         validate(responseType: self.responseType,
                  token: values["id_token"],
+                 authentication: self.authentication,
                  nonce: self.defaults["nonce"],
-                 authentication: self.authentication) { error in
-            if let error = error {
-                return callback(.failure(error: error))
-            }
+                 leeway: self.leeway,
+                 maxAge: self.maxAge) { error in
+            if let error = error { return callback(.failure(error: error)) }
             guard !responseType.contains(.token) || values["access_token"] != nil else {
                 return callback(.failure(error: WebAuthError.missingAccessToken))
             }
@@ -75,16 +83,42 @@ struct PKCE: OAuth2Grant {
     let defaults: [String: String]
     let verifier: String
     let responseType: [ResponseType]
+    let leeway: Int
+    let maxAge: Int?
 
-    init(authentication: Authentication, redirectURL: URL, generator: A0SHA256ChallengeGenerator = A0SHA256ChallengeGenerator(), reponseType: [ResponseType] = [.code], nonce: String? = nil) {
-        self.init(authentication: authentication, redirectURL: redirectURL, verifier: generator.verifier, challenge: generator.challenge, method: generator.method, responseType: reponseType, nonce: nonce)
+    init(authentication: Authentication,
+         redirectURL: URL,
+         generator: A0SHA256ChallengeGenerator = A0SHA256ChallengeGenerator(),
+         reponseType: [ResponseType] = [.code],
+         nonce: String? = nil,
+         leeway: Int,
+         maxAge: Int? = nil) {
+        self.init(authentication: authentication,
+                  redirectURL: redirectURL,
+                  verifier: generator.verifier,
+                  challenge: generator.challenge,
+                  method: generator.method,
+                  responseType: reponseType,
+                  nonce: nonce,
+                  leeway: leeway,
+                  maxAge: maxAge)
     }
 
-    init(authentication: Authentication, redirectURL: URL, verifier: String, challenge: String, method: String, responseType: [ResponseType], nonce: String? = nil) {
+    init(authentication: Authentication,
+         redirectURL: URL,
+         verifier: String,
+         challenge: String,
+         method: String,
+         responseType: [ResponseType],
+         nonce: String? = nil,
+         leeway: Int,
+         maxAge: Int? = nil) {
         self.authentication = authentication
         self.redirectURL = redirectURL
         self.verifier = verifier
         self.responseType = responseType
+        self.leeway = leeway
+        self.maxAge = maxAge
 
         var newDefaults: [String: String] = [
             "code_challenge": challenge,
@@ -98,20 +132,28 @@ struct PKCE: OAuth2Grant {
         self.defaults = newDefaults
     }
 
+    // swiftlint:disable:next function_body_length
     func credentials(from values: [String: String], callback: @escaping (Result<Credentials>) -> Void) {
         guard let code = values["code"] else {
             let string = "No code found in parameters \(values)"
             return callback(.failure(error: AuthenticationError(string: string)))
         }
-        let idToken = values["id_token"]
         let isHybridFlow = self.responseType.contains(.idToken)
+        let idToken = values["id_token"]
         let verifier = self.verifier
         let redirectUrlString = self.redirectURL.absoluteString
         let clientId = self.authentication.clientId
-        validate(responseType: self.responseType, token: idToken, nonce: self.defaults["nonce"], authentication: self.authentication) { [authentication = self.authentication] error in
-            if let error = error {
-                return callback(.failure(error: error))
-            }
+        let responseType = self.responseType
+        let nonce = self.defaults["nonce"]
+        let leeway = self.leeway
+        let maxAge = self.maxAge
+        validate(responseType: self.responseType,
+                 token: idToken,
+                 authentication: self.authentication,
+                 nonce: nonce,
+                 leeway: self.leeway,
+                 maxAge: maxAge) { [authentication = self.authentication] error in
+            if let error = error { return callback(.failure(error: error)) }
             authentication
                 .tokenExchange(withCode: code, codeVerifier: verifier, redirectURI: redirectUrlString)
                 .start { result in
@@ -124,24 +166,23 @@ struct PKCE: OAuth2Grant {
                         }
                     case .failure: return callback(result)
                     case .success(let credentials):
-                        switch getAlgorithm(jwt: idToken) {
-                        case .rs256:
-                            if isHybridFlow {
-                                let newCredentials = Credentials(accessToken: credentials.accessToken,
-                                                                 tokenType: credentials.tokenType,
-                                                                 idToken: idToken,
-                                                                 refreshToken: credentials.refreshToken,
-                                                                 expiresIn: credentials.expiresIn,
-                                                                 scope: credentials.scope)
-                                return callback(Result.success(result: newCredentials))
-                            }
-                        case .none: break
+                        if isHybridFlow {
+                            let newCredentials = Credentials(accessToken: credentials.accessToken,
+                                                             tokenType: credentials.tokenType,
+                                                             idToken: idToken,
+                                                             refreshToken: credentials.refreshToken,
+                                                             expiresIn: credentials.expiresIn,
+                                                             scope: credentials.scope)
+                            return callback(.success(result: newCredentials))
                         }
-                        let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
-                        return validate(idToken: credentials.idToken, context: context) { error in
-                            if let error = error {
-                                return callback(Result.failure(error: error))
-                            }
+                        // Code flow
+                        return validate(responseType: responseType,
+                                        token: credentials.idToken,
+                                        authentication: authentication,
+                                        nonce: nonce,
+                                        leeway: leeway,
+                                        maxAge: maxAge) { error in
+                            if let error = error { return callback(.failure(error: error)) }
                             callback(result)
                         }
                     }
@@ -157,34 +198,21 @@ struct PKCE: OAuth2Grant {
     }
 }
 
-private func validate(responseType: [ResponseType], token: String?, nonce: String?, authentication: Authentication, callback: @escaping (LocalizedError?) -> Void) {
-    guard responseType.contains(.idToken) else { // Code flow case, below is Hybrid flow
-        return callback(nil)
-    }
-    guard let expectedNonce = nonce, let token = token else {
-        return callback(WebAuthError.invalidIdTokenNonce)
-    }
-    let context = IDTokenValidatorContext(domain: authentication.url.host!, clientId: authentication.clientId, jwksRequest: authentication.jwks())
+// swiftlint:disable:next function_parameter_count
+private func validate(responseType: [ResponseType],
+                      token: String?,
+                      authentication: Authentication,
+                      nonce: String?,
+                      leeway: Int,
+                      maxAge: Int?,
+                      callback: @escaping (LocalizedError?) -> Void) {
+    guard responseType.contains(.idToken) else { return callback(nil) } // Code flow case, below is Hybrid flow
+    let context = IDTokenValidatorContext(authentication: authentication,
+                                          nonce: nonce,
+                                          leeway: leeway,
+                                          maxAge: maxAge)
     validate(idToken: token, context: context) { error in
-        if let error = error {
-            return callback(error)
-        }
-        // Will be done with the claims validation
-        if getNonce(jwt: token) != expectedNonce {
-            callback(WebAuthError.invalidIdTokenNonce)
-        } else {
-            callback(nil)
-        }
+        if let error = error { return callback(error) }
+        callback(nil)
     }
-}
-
-private func getAlgorithm(jwt: String?) -> JWTAlgorithm? {
-    guard let jwt = jwt, let decodedJwt = try? decode(jwt: jwt), let alg = decodedJwt.header["alg"] as? String else { return nil }
-    return JWTAlgorithm(rawValue: alg)
-}
-
-// TODO: Remove after implementing claims validation
-private func getNonce(jwt: String?) -> String? {
-    guard let jwt = jwt, let decodedJwt = try? decode(jwt: jwt) else { return nil }
-    return decodedJwt.claim(name: "nonce").string
 }

@@ -29,10 +29,18 @@ import Nimble
 class IDTokenValidatorBaseSpec: QuickSpec {
     let domain = "tokens-test.auth0.com"
     let clientId = "tokens-test-123"
+    let nonce = "a1b2c3d4e5"
+    let leeway = 60 * 1000
+    let maxAge = 1000
     
     // Can't override the initWithInvocation: initializer, because NSInvocation is not available in Swift
     lazy var authentication = Auth0.authentication(clientId: clientId, domain: domain)
-    lazy var validatorContext = IDTokenValidatorContext(domain: domain, clientId: clientId, jwksRequest: authentication.jwks())
+    lazy var validatorContext = IDTokenValidatorContext(domain: domain,
+                                                        clientId: clientId,
+                                                        jwksRequest: authentication.jwks(),
+                                                        nonce: nonce,
+                                                        leeway: leeway,
+                                                        maxAge: maxAge)
 }
 
 class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
@@ -60,6 +68,8 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
     // iss does NOT match the domain -> fail
     // sub is present
     // sub is NOT present -> fail
+    // sub is NOT empty
+    // sub is empty -> fail
     // aud is present
     // aud is NOT present -> fail
     // aud matches the Client ID
@@ -67,13 +77,11 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
     // aud contains the Client ID
     // aud does NOT contain the Client ID -> fail
     // exp is present
-    // exp is NOT presernt -> fail
+    // exp is NOT present -> fail
     // exp is a date in the future
     // exp is NOT a date in the future -> fail
     // iat is present
     // iat is NOT present -> fail
-    // iat is a date in the past
-    // iat is NOT a date in the past -> fail
     // nonce is present
     // nonce is NOT present -> fail
     // nonce matches the one in the request
@@ -99,14 +107,14 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
-                        expect(error as? IDTokenValidationError).to(equal(IDTokenValidationError.missingToken))
+                        expect(error as? IDTokenDecodingError).to(equal(IDTokenDecodingError.missingToken))
                         done()
                     }
                 }
             }
             
             context("id token decoding") {
-                let expectedError = IDTokenValidationError.cannotDecode
+                let expectedError = IDTokenDecodingError.cannotDecode
                 
                 it("should fail to decode an empty id token") {
                     waitUntil { done in
@@ -114,7 +122,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
                             done()
                         }
                     }
@@ -126,7 +134,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
                             done()
                         }
                     }
@@ -136,7 +144,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
                             done()
                         }
                     }
@@ -148,7 +156,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenValidationError).to(equal(expectedError))
+                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
                             done()
                         }
                     }

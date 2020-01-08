@@ -1,6 +1,6 @@
-// IDTokenValidatorMocks.swift
+// JWT+Header.swift
 //
-// Copyright (c) 2019 Auth0 (http://auth0.com)
+// Copyright (c) 2020 Auth0 (http://auth0.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,13 @@
 import Foundation
 import JWTDecode
 
-@testable import Auth0
-
-class MockIDTokenSignatureValidator: JWTSignatureValidator {
-    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void) {
-        callback(nil)
+extension JWT {
+    var algorithm: JWTAlgorithm? {
+        guard let alg = header["alg"] as? String, let algorithm = JWTAlgorithm(rawValue: alg) else { return nil }
+        return algorithm
+    }
+    
+    var kid: String? {
+        return header["kid"] as? String
     }
 }
-
-class MockIDTokenClaimsValidator: JWTClaimValidator {
-    func validate(_ jwt: JWT) -> LocalizedError? {
-        return nil
-    }
-}
-

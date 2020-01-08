@@ -130,7 +130,7 @@ public struct CredentialsManager {
     }
 
     /// Retrieve credentials from keychain and yield new credentials using refreshToken if accessToken has expired
-    /// otherwise the retrieved credentails will be returned as they have not expired. Renewed credentials will be 
+    /// otherwise the retrieved credentails will be returned as they have not expired. Renewed credentials will be
     /// stored in the keychain.
     ///
     ///
@@ -186,18 +186,6 @@ public struct CredentialsManager {
                                                  refreshToken: refreshToken,
                                                  expiresIn: credentials.expiresIn,
                                                  scope: credentials.scope)
-                if let idToken = credentials.idToken {
-                    let validatorContext = IDTokenValidatorContext(domain: self.authentication.url.host!,
-                                                                   clientId: self.authentication.clientId,
-                                                                   jwksRequest: self.authentication.jwks())
-                    return validate(idToken: idToken, context: validatorContext) { error in
-                        if let error = error {
-                            return callback(.failedRefresh(error), nil)
-                        }
-                        _ = self.store(credentials: newCredentials)
-                        callback(nil, newCredentials)
-                    }
-                }
                 _ = self.store(credentials: newCredentials)
                 callback(nil, newCredentials)
             case .failure(let error):
@@ -211,8 +199,8 @@ public struct CredentialsManager {
             if expiresIn < Date() { return true }
         }
 
-        if let token = credentials.idToken, let tokenDecoded = try? decode(jwt: token) {
-            return tokenDecoded.expired
+        if let token = credentials.idToken, let jwt = try? decode(jwt: token) {
+            return jwt.expired
         }
 
         return false

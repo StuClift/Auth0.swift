@@ -1,6 +1,6 @@
-// IDTokenValidatorMocks.swift
+// JWTAlgorithm.swift
 //
-// Copyright (c) 2019 Auth0 (http://auth0.com)
+// Copyright (c) 2020 Auth0 (http://auth0.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,24 @@
 import Foundation
 import JWTDecode
 
-@testable import Auth0
-
-class MockIDTokenSignatureValidator: JWTSignatureValidator {
-    func validate(_ jwt: JWT, callback: @escaping (LocalizedError?) -> Void) {
-        callback(nil)
+enum JWTAlgorithm: String {
+    case rs256 = "RS256"
+    case hs256 = "HS256"
+    
+    func verify(_ jwt: JWT, using jwk: JWK) -> Bool {
+        switch self {
+        case .rs256:
+            let separator = "."
+            let parts = jwt.string.components(separatedBy: separator).dropLast().joined(separator: separator)
+            guard let data = parts.data(using: .utf8),
+                let signature = jwt.signature?.a0_decodeBase64URLSafe(),
+                let publicKey = jwk.rsaPublicKey,
+                let sha256 = A0SHA(algorithm: "sha256"),
+                let rsa = A0RSA(key: publicKey) else {
+                    return false
+            }
+            return rsa.verify(sha256.hash(data), signature: signature)
+        case .hs256: return true // This will jump straight to the claims validation
+        }
     }
 }
-
-class MockIDTokenClaimsValidator: JWTClaimValidator {
-    func validate(_ jwt: JWT) -> LocalizedError? {
-        return nil
-    }
-}
-
