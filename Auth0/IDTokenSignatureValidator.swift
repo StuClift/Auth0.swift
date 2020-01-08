@@ -23,7 +23,7 @@
 import Foundation
 import JWTDecode
 
-protocol IDTokenSignatureContext {
+protocol IDTokenSignatureValidatorContext {
     var domain: String { get }
     var clientId: String { get }
     var jwksRequest: Request<JWKS, AuthenticationError> { get }
@@ -53,9 +53,9 @@ final class IDTokenSignatureValidator: JWTSignatureValidator {
         }
     }
     
-    private let context: IDTokenSignatureContext
+    private let context: IDTokenSignatureValidatorContext
     
-    init(context: IDTokenSignatureContext) {
+    init(context: IDTokenSignatureValidatorContext) {
         self.context = context
     }
     

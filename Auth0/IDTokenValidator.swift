@@ -79,12 +79,8 @@ func validate(idToken: String?,
               signatureValidator: JWTSignatureValidator? = nil, // for testing
               claimsValidator: JWTClaimValidator? = nil,
               callback: @escaping (LocalizedError?) -> Void) {
-    guard let idToken = idToken else {
-        return callback(IDTokenDecodingError.missingToken)
-    }
-    guard let jwt = try? decode(jwt: idToken) else {
-        return callback(IDTokenDecodingError.cannotDecode)
-    }
+    guard let idToken = idToken else { return callback(IDTokenDecodingError.missingToken) }
+    guard let jwt = try? decode(jwt: idToken) else { return callback(IDTokenDecodingError.cannotDecode) }
     var claimsValidators: [JWTClaimValidator] = [IDTokenIssValidator(domain: context.domain),
                                                  IDTokenSubValidator(),
                                                  IDTokenAudValidator(clientId: context.clientId),

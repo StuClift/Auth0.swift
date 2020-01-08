@@ -23,7 +23,7 @@
 import Foundation
 import JWTDecode
 
-protocol IDTokenClaimsContext {
+protocol IDTokenClaimsValidatorContext {
     var domain: String { get }
     var clientId: String { get }
     var leeway: Int { get }
@@ -32,7 +32,7 @@ protocol IDTokenClaimsContext {
 }
 
 final class IDTokenClaimsValidator: JWTClaimValidator {
-    private var validators: [JWTClaimValidator]
+    private let validators: [JWTClaimValidator]
     
     init(validators: [JWTClaimValidator]) {
         self.validators = validators

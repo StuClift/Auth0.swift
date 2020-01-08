@@ -22,7 +22,7 @@
 
 import Foundation
 
-struct IDTokenValidatorContext: IDTokenSignatureContext, IDTokenClaimsContext {
+struct IDTokenValidatorContext: IDTokenSignatureValidatorContext, IDTokenClaimsValidatorContext {
     let domain: String
     let clientId: String
     let jwksRequest: Request<JWKS, AuthenticationError>
@@ -44,10 +44,7 @@ struct IDTokenValidatorContext: IDTokenSignatureContext, IDTokenClaimsContext {
         self.maxAge = maxAge
     }
     
-    init(authentication: Authentication,
-         nonce: String?,
-         leeway: Int,
-         maxAge: Int?) {
+    init(authentication: Authentication, nonce: String?, leeway: Int, maxAge: Int?) {
         self.domain = authentication.url.host!
         self.clientId = authentication.clientId
         self.jwksRequest = authentication.jwks()
