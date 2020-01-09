@@ -33,14 +33,15 @@ class OAuth2GrantSpec: QuickSpec {
         let domain = URL.a0_url("samples.auth0.com")
         let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
         let nonce = "a1b2c3d4e5"
-        let idToken = generateJWT().string
+        let idToken = generateJWT(iss: domain.absoluteString, aud: [authentication.clientId]).string
+        let leeway = 60 * 1000
 
         describe("ImplicitGrant") {
 
             var implicit: ImplicitGrant!
             
             beforeEach {
-                implicit = ImplicitGrant(authentication: authentication)
+                implicit = ImplicitGrant(authentication: authentication, leeway: leeway)
                 stub(condition: isJWKSPath(domain.host!)) { _ in jwksResponse() }
             }
 
@@ -71,7 +72,7 @@ class OAuth2GrantSpec: QuickSpec {
             describe("ImplicitGrant with id_token") {
 
                 beforeEach {
-                    implicit = ImplicitGrant(authentication: authentication, responseType: [.idToken], nonce: nonce)
+                    implicit = ImplicitGrant(authentication: authentication, responseType: [.idToken], nonce: nonce, leeway: leeway)
                 }
 
                 it("should build credentials") {
@@ -106,7 +107,7 @@ class OAuth2GrantSpec: QuickSpec {
                 }
 
                 it("should fail cause nonce does not match expected one") {
-                    implicit = ImplicitGrant(authentication: authentication, responseType: [.idToken], nonce: "nomatch")
+                    implicit = ImplicitGrant(authentication: authentication, responseType: [.idToken], nonce: "nomatch", leeway: leeway)
                     let values = ["id_token": idToken]
                     waitUntil { done in
                         implicit.credentials(from: values) {
@@ -132,7 +133,7 @@ class OAuth2GrantSpec: QuickSpec {
             beforeEach {
                 verifier = "\(arc4random())"
                 challenge = "\(arc4random())"
-                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response)
+                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response, nonce: nil, leeway: leeway)
             }
 
             afterEach {
@@ -179,7 +180,7 @@ class OAuth2GrantSpec: QuickSpec {
             it("should get values from generator") {
                 let generator = A0SHA256ChallengeGenerator()
                 let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
-                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, generator: generator, reponseType: response)
+                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, generator: generator, reponseType: response, nonce: nil, leeway: leeway)
                 
                 expect(pkce.defaults["code_challenge_method"]) == generator.method
                 expect(pkce.defaults["code_challenge"]) == generator.challenge
@@ -202,7 +203,7 @@ class OAuth2GrantSpec: QuickSpec {
                 verifier = "\(arc4random())"
                 challenge = "\(arc4random())"
                 authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
-                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response, nonce: nonce)
+                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response, nonce: nonce, leeway: leeway)
             }
 
             afterEach {
@@ -227,7 +228,7 @@ class OAuth2GrantSpec: QuickSpec {
             }
 
             it("shoud fail credentials no nonce") {
-                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response)
+                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, verifier: verifier, challenge: challenge, method: method, responseType: response, nonce: nil, leeway: leeway)
                 let token = UUID().uuidString
                 let code = UUID().uuidString
                 let values = ["code": code, "id_token": idToken]
@@ -262,7 +263,7 @@ class OAuth2GrantSpec: QuickSpec {
             it("should get values from generator") {
                 let generator = A0SHA256ChallengeGenerator()
                 let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
-                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, generator: generator, reponseType: response, nonce: nonce)
+                pkce = PKCE(authentication: authentication, redirectURL: redirectURL, generator: generator, reponseType: response, nonce: nonce, leeway: leeway)
 
                 expect(pkce.defaults["code_challenge_method"]) == generator.method
                 expect(pkce.defaults["code_challenge"]) == generator.challenge

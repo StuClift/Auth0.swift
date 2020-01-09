@@ -179,7 +179,7 @@ final class IDTokenExpValidator: JWTClaimValidator {
         guard let exp = jwt.expiresAt else { return ValidationError.missingExp }
         let currentTimeEpoch = Date().timeIntervalSince1970
         let expEpoch = exp.timeIntervalSince1970 + Double(leeway)
-        guard expEpoch < currentTimeEpoch else {
+        guard expEpoch > currentTimeEpoch else {
             return ValidationError.pastExp(currentTime: currentTimeEpoch, expirationTime: expEpoch)
 
         }

@@ -29,6 +29,7 @@ import OHHTTPStubs
 
 private let ClientId = "CLIENT_ID"
 private let Domain = URL(string: "https://samples.auth0.com")!
+private let Leeway = 60 * 1000
 
 class MockSafariViewController: SFSafariViewController {
     var presenting: UIViewController? = nil
@@ -49,7 +50,7 @@ class SafariSessionSpec: QuickSpec {
         let controller = MockSafariViewController(url: URL(string: "https://auth0.com")!)
         let domain = URL.a0_url("samples.auth0.com")
         let authentication = Auth0Authentication(clientId: "CLIENT_ID", url: domain)
-        let handler = ImplicitGrant(authentication: authentication)
+        let handler = ImplicitGrant(authentication: authentication, leeway: Leeway)
         let session = SafariSession(controller: controller, redirectURL: RedirectURL, handler: handler, finish: callback, logger: nil)
 
         beforeEach {
@@ -117,7 +118,9 @@ class SafariSessionSpec: QuickSpec {
             context("response_type=code") {
 
                 let generator = A0SHA256ChallengeGenerator()
-                let session = SafariSession(controller: controller, redirectURL: RedirectURL, handler: PKCE(authentication: Auth0Authentication(clientId: ClientId, url: Domain), redirectURL: RedirectURL, generator: generator, reponseType: [.code]), finish: callback, logger: nil)
+                let authentication = Auth0Authentication(clientId: ClientId, url: Domain)
+                let handler = PKCE(authentication: authentication, redirectURL: RedirectURL, generator: generator, reponseType: [.code], nonce: nil, leeway: Leeway)
+                let session = SafariSession(controller: controller, redirectURL: RedirectURL, handler: handler, finish: callback, logger: nil)
                 let code = "123456"
                 let domain = "samples.auth0.com"
                 let idToken = generateJWT().string
