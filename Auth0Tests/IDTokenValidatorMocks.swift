@@ -37,3 +37,37 @@ class MockIDTokenClaimsValidator: JWTClaimValidator {
     }
 }
 
+class MockSuccessfulIDTokenClaimValidator: JWTClaimValidator {
+    func validate(_ jwt: JWT) -> LocalizedError? {
+        return nil
+    }
+}
+
+class MockUnsuccessfulIDTokenClaimValidator: JWTClaimValidator {
+    enum ValidationError: LocalizedError {
+        case errorCase1
+        case errorCase2
+        
+        var errorDescription: String? {
+            return "Error message"
+        }
+        
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+            switch (lhs, rhs) {
+            case (.errorCase1, .errorCase1): return true
+            case (.errorCase2, .errorCase2): return true
+            default: return false
+            }
+        }
+    }
+    
+    let errorCase: ValidationError
+    
+    init(errorCase: ValidationError = .errorCase1) {
+        self.errorCase = errorCase
+    }
+    
+    func validate(_ jwt: JWT) -> LocalizedError? {
+        return errorCase
+    }
+}

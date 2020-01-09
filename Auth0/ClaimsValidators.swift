@@ -56,7 +56,7 @@ final class IDTokenIssValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingIss, .missingIss): return true
             case (.mismatchedIss, .mismatchedIss): return true
@@ -90,7 +90,7 @@ final class IDTokenSubValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingSub, .missingSub): return true
             }
@@ -120,7 +120,7 @@ final class IDTokenAudValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingAud, .missingAud): return true
             case (.mismatchedAudString, .mismatchedAudString): return true
@@ -160,7 +160,7 @@ final class IDTokenExpValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingExp, .missingExp): return true
             case (.pastExp, .pastExp): return true
@@ -196,7 +196,7 @@ final class IDTokenIatValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingIat, .missingIat): return true
             }
@@ -222,7 +222,7 @@ final class IDTokenNonceValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingNonce, .missingNonce): return true
             case (.mismatchedNonce, .mismatchedNonce): return true
@@ -260,7 +260,7 @@ final class IDTokenAzpValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingAzp, .missingAzp): return true
             case (.mismatchedAzp, .mismatchedAzp): return true
@@ -298,7 +298,7 @@ final class IDTokenAuthTimeValidator: JWTClaimValidator {
             }
         }
         
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
+        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingAuthTime, .missingAuthTime): return true
             case (.pastLastAuth, .pastLastAuth): return true

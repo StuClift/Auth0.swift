@@ -1,6 +1,6 @@
 // ClaimsValidatorsSpec.swift
 //
-// Copyright (c) 2019 Auth0 (http://auth0.com)
+// Copyright (c) 2020 Auth0 (http://auth0.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,45 @@ import OHHTTPStubs
 class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
     
     override func spec() {
+        describe("claims validation") {
+            
+            let jwt = generateJWT()
+            
+            context("successful validation") {
+                it("should return nil if no claim validator returns an error") {
+                    let claimsValidators: [JWTClaimValidator] = [MockSuccessfulIDTokenClaimValidator(),
+                                                                 MockSuccessfulIDTokenClaimValidator(),
+                                                                 MockSuccessfulIDTokenClaimValidator()]
+                    let claimsValidator = IDTokenClaimsValidator(validators: claimsValidators)
+                    
+                    expect(claimsValidator.validate(jwt)).to(beNil())
+                }
+            }
+            
+            context("unsuccessful validation") {
+                it("should return an error if a claim validator returns an error") {
+                    let claimsValidators: [JWTClaimValidator] = [MockSuccessfulIDTokenClaimValidator(),
+                                                                 MockSuccessfulIDTokenClaimValidator(),
+                                                                 MockSuccessfulIDTokenClaimValidator(),
+                                                                 MockUnsuccessfulIDTokenClaimValidator()]
+                    let claimsValidator = IDTokenClaimsValidator(validators: claimsValidators)
+                    
+                    expect(claimsValidator.validate(jwt)).toNot(beNil())
+                }
+                
+                it("should return the first error if more than one claim validator returns an error") {
+                    let claimsValidators: [JWTClaimValidator] = [MockSuccessfulIDTokenClaimValidator(),
+                                                                 MockUnsuccessfulIDTokenClaimValidator(errorCase: .errorCase2),
+                                                                 MockSuccessfulIDTokenClaimValidator(),
+                                                                 MockUnsuccessfulIDTokenClaimValidator(errorCase: .errorCase1)]
+                    let claimsValidator = IDTokenClaimsValidator(validators: claimsValidators)
+                    let expectedError = MockUnsuccessfulIDTokenClaimValidator.ValidationError.errorCase2
+                    
+                    expect((claimsValidator.validate(jwt) as! MockUnsuccessfulIDTokenClaimValidator.ValidationError)).to(equal(expectedError))
+                }
+            }
+        }
+        
         describe("iss validation") {
             
             var issValidator: IDTokenIssValidator!
