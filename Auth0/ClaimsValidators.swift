@@ -106,14 +106,14 @@ final class IDTokenSubValidator: JWTClaimValidator {
 final class IDTokenAudValidator: JWTClaimValidator {
     enum ValidationError: LocalizedError, Equatable {
         case missingAud
-        case mismatchedAud(actual: String, expected: String)
+        case mismatchedAudString(actual: String, expected: String)
         case mismatchedAudArray(actual: String, expected: String)
         
         var errorDescription: String? {
             switch self {
             case .missingAud:
                 return "Audience (aud) claim must be a string or array of strings present in the ID token"
-            case .mismatchedAud(let actual, let expected):
+            case .mismatchedAudString(let actual, let expected):
                 return "Audience (aud) claim mismatch in the ID token; expected (\(expected)) but found (\(actual))"
             case .mismatchedAudArray(let actual, let expected):
                 return "Audience (aud) claim mismatch in the ID token; expected (\(expected)) but was not one of (\(actual))"
@@ -123,7 +123,7 @@ final class IDTokenAudValidator: JWTClaimValidator {
         public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
             switch (lhs, rhs) {
             case (.missingAud, .missingAud): return true
-            case (.mismatchedAud, .mismatchedAud): return true
+            case (.mismatchedAudString, .mismatchedAudString): return true
             case (.mismatchedAudArray, .mismatchedAudArray): return true
             default: return false
             }
@@ -140,7 +140,7 @@ final class IDTokenAudValidator: JWTClaimValidator {
         guard let aud = jwt.audience, !aud.isEmpty else { return ValidationError.missingAud }
         guard aud.contains(clientId) else {
             return aud.count == 1 ?
-                ValidationError.mismatchedAud(actual: aud.first!, expected: clientId) :
+                ValidationError.mismatchedAudString(actual: aud.first!, expected: clientId) :
                 ValidationError.mismatchedAudArray(actual: aud.joined(separator: ", "), expected: clientId)
         }
         return nil
@@ -317,9 +317,9 @@ final class IDTokenAuthTimeValidator: JWTClaimValidator {
     
     func validate(_ jwt: JWT) -> LocalizedError? {
         guard let authTime = jwt.claim(name: "auth_time").date else { return ValidationError.missingAuthTime }
-        let currentTime = Date().timeIntervalSince1970
+        let currentTimeEpoch = Date().timeIntervalSince1970
         let authTimeEpoch = authTime.timeIntervalSince1970 + Double(maxAge) + Double(leeway)
-        guard currentTime < authTimeEpoch else { return ValidationError.pastLastAuth(currentTime: currentTime, lastAuthTime: authTimeEpoch) }
+        guard authTimeEpoch < currentTimeEpoch else { return ValidationError.pastLastAuth(currentTime: currentTimeEpoch, lastAuthTime: authTimeEpoch) }
         return nil
     }
 }

@@ -58,23 +58,36 @@ private func generateJWTHeader(alg: String, kid: String) -> String {
 
 private func generateJWTBody(alg: String,
                              kid: String,
-                             iss: String,
-                             sub: String,
-                             aud: [String],
-                             exp: Date,
-                             iat: Date,
+                             iss: String?,
+                             sub: String?,
+                             aud: [String]?,
+                             exp: Date?,
+                             iat: Date?,
                              azp: String?,
+                             nonce: String?,
                              maxAge: Int?,
-                             authTime: Date?,
-                             nonce: String) -> String {
-    var bodyDict: [String: Any] = [
-        "iss": iss,
-        "sub": sub,
-        "aud": aud.count == 1 ? aud[0] : aud,
-        "exp": exp.timeIntervalSince1970,
-        "iat": iat.timeIntervalSince1970,
-        "nonce": nonce
-    ]
+                             authTime: Date?) -> String {
+    var bodyDict: [String: Any] = [:]
+    
+    if let iss = iss {
+        bodyDict["iss"] = iss
+    }
+    
+    if let sub = sub {
+        bodyDict["sub"] = sub
+    }
+    
+    if let aud = aud {
+        bodyDict["aud"] = aud.count == 1 ? aud[0] : aud
+    }
+    
+    if let exp = exp {
+        bodyDict["exp"] = exp.timeIntervalSince1970
+    }
+    
+    if let iat = iat {
+        bodyDict["iat"] = iat.timeIntervalSince1970
+    }
     
     if let azp = azp {
         bodyDict["azp"] = azp
@@ -88,20 +101,24 @@ private func generateJWTBody(alg: String,
         bodyDict["auth_time"] = authTime.timeIntervalSince1970
     }
     
+    if let nonce = nonce {
+        bodyDict["nonce"] = nonce
+    }
+    
     return encodeJWTPart(from: bodyDict)
 }
 
 func generateJWT(alg: String = JWTAlgorithm.rs256.rawValue,
                  kid: String = "key123",
-                 iss: String = "https://tokens-test.auth0.com/",
-                 sub: String = "auth0|123456789",
-                 aud: [String] = ["tokens-test-123"],
-                 exp: Date = Date().addingTimeInterval(100000),
-                 iat: Date = Date().addingTimeInterval(-1000),
+                 iss: String? = "https://tokens-test.auth0.com/",
+                 sub: String? = "auth0|123456789",
+                 aud: [String]? = ["tokens-test-123"],
+                 exp: Date? = Date().addingTimeInterval(100000),
+                 iat: Date? = Date().addingTimeInterval(-1000),
                  azp: String? = nil,
+                 nonce: String? = "a1b2c3d4e5",
                  maxAge: Int? = nil,
                  authTime: Date? = nil,
-                 nonce: String = "a1b2c3d4e5",
                  signature: String? = nil) -> JWT {
     let header = generateJWTHeader(alg: alg, kid: kid)
     let body = generateJWTBody(alg: alg,
@@ -112,9 +129,9 @@ func generateJWT(alg: String = JWTAlgorithm.rs256.rawValue,
                                exp: exp,
                                iat: iat,
                                azp: azp,
+                               nonce: nonce,
                                maxAge: maxAge,
-                               authTime: authTime,
-                               nonce: nonce)
+                               authTime: authTime)
     
     let signableParts = "\(header).\(body)"
     var signaturePart = "SIGNATURE"
