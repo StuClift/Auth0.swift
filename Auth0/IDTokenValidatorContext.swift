@@ -45,11 +45,11 @@ struct IDTokenValidatorContext: IDTokenSignatureValidatorContext, IDTokenClaimsV
     }
     
     init(authentication: Authentication, nonce: String?, leeway: Int, maxAge: Int?) {
-        self.domain = authentication.url.host!
-        self.clientId = authentication.clientId
-        self.jwksRequest = authentication.jwks()
-        self.nonce = nonce
-        self.leeway = leeway
-        self.maxAge = maxAge
+        self.init(domain: authentication.url.host!,
+                  clientId: authentication.clientId,
+                  jwksRequest: authentication.jwks(),
+                  nonce: nonce,
+                  leeway: leeway,
+                  maxAge: maxAge)
     }
 }
