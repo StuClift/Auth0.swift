@@ -32,16 +32,42 @@ class JWTAlgorithmSpec: QuickSpec {
         let jwk = generateRSAJWK()
         
         describe("signature validation") {
-            it("should return true with a correct RS256 signature") {
-                let jwt = generateJWT()
+            context("RSA256") {
+                let alg = "RS256"
                 
-                expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beTrue())
+                it("should return true with a correct RS256 signature") {
+                    let jwt = generateJWT(alg: alg)
+                    
+                    expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beTrue())
+                }
+                
+                it("should return false with an empty signature") {
+                    let jwt = generateJWT(alg: alg, signature: "")
+                    
+                    expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beFalse())
+                }
+                
+                it("should return false with an incorrect signature") {
+                    let jwt = generateJWT(alg: alg, signature: "abc123")
+                    
+                    expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beFalse())
+                }
             }
             
-            it("should return false with an incorrect RS256 signature") {
-                let jwt = generateJWT(alg: "UNSUPPORTED")
+            context("HS256") {
+                let alg = "HS256"
                 
-                expect(JWTAlgorithm.rs256.verify(jwt, using: jwk)).to(beFalse())
+                it("should return true with any signature") {
+                    let jwt = generateJWT(alg: alg, signature: "abc123")
+                    
+                    expect(JWTAlgorithm.hs256.verify(jwt, using: jwk)).to(beTrue())
+                }
+                
+                it("should return false with an empty HS256 signature") {
+                    let jwt = generateJWT(alg: alg, signature: "")
+                    
+                    expect(JWTAlgorithm.hs256.verify(jwt, using: jwk)).to(beFalse())
+                }
             }
         }
     }

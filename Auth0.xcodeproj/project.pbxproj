@@ -787,13 +787,30 @@
 			name = Mocks;
 			sourceTree = "<group>";
 		};
+		5CF4B9F823C777CB00DE8AA7 /* Validators */ = {
+			isa = PBXGroup;
+			children = (
+				5C1B5E2623957C660076E46B /* IDTokenValidatorSpec.swift */,
+				5C316FC523BA8D3A002559A7 /* IDTokenSignatureValidatorSpec.swift */,
+			);
+			name = Validators;
+			sourceTree = "<group>";
+		};
+		5CF4B9F923C777F500DE8AA7 /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				5C316FD623BAC0D5002559A7 /* JWTAlgorithmSpec.swift */,
+			);
+			name = Crypto;
+			sourceTree = "<group>";
+		};
 		5CFC8CFE23C63A2B00FE10A7 /* Validators */ = {
 			isa = PBXGroup;
 			children = (
 				5C1B5E2923959D260076E46B /* IDTokenValidator.swift */,
+				5CFC8D0423C6506500FE10A7 /* IDTokenValidatorContext.swift */,
 				5CFC8CF923C639E700FE10A7 /* IDTokenSignatureValidator.swift */,
 				5CFC8CFF23C64B8B00FE10A7 /* ClaimsValidators.swift */,
-				5CFC8D0423C6506500FE10A7 /* IDTokenValidatorContext.swift */,
 			);
 			name = Validators;
 			sourceTree = "<group>";
@@ -855,6 +872,7 @@
 				5FBBF0411CCA901B0024D2AF /* Authentication */,
 				5FADB6011CEC0C1600D4BB50 /* Management */,
 				5FE2F8C11CD0FA11003628F4 /* Networking */,
+				5CF4B9F923C777F500DE8AA7 /* Crypto */,
 				5FCAB1661D07ABEA00331C84 /* WebAuth */,
 				5FCCC30F1CF4D4D000901E2E /* ObjectiveC */,
 				5C316FCD23BA9153002559A7 /* Mocks */,
@@ -1006,15 +1024,13 @@
 		5FBBF0331CC95FA40024D2AF /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				5CF4B9F823C777CB00DE8AA7 /* Validators */,
 				5B9262C11ECF0CBA00F4F6D3 /* BioAuthenticationSpec.swift */,
 				5BEDE1931EC3331A0007300D /* CredentialsManagerSpec.swift */,
-				5C1B5E2623957C660076E46B /* IDTokenValidatorSpec.swift */,
-				5C316FC523BA8D3A002559A7 /* IDTokenSignatureValidatorSpec.swift */,
 				5FBBF0371CC964BC0024D2AF /* Matchers.swift */,
 				5FBBF03A1CC96AA70024D2AF /* Responses.swift */,
 				5C316FC923BA9077002559A7 /* Generators.swift */,
 				5C316FD223BA963C002559A7 /* Extensions.swift */,
-				5C316FD623BAC0D5002559A7 /* JWTAlgorithmSpec.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";

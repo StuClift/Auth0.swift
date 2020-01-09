@@ -101,7 +101,8 @@ func generateJWT(alg: String = JWTAlgorithm.rs256.rawValue,
                  azp: String? = nil,
                  maxAge: Int? = nil,
                  authTime: Date? = nil,
-                 nonce: String = "a1b2c3d4e5") -> JWT {
+                 nonce: String = "a1b2c3d4e5",
+                 signature: String? = nil) -> JWT {
     let header = generateJWTHeader(alg: alg, kid: kid)
     let body = generateJWTBody(alg: alg,
                                kid: kid,
@@ -116,13 +117,16 @@ func generateJWT(alg: String = JWTAlgorithm.rs256.rawValue,
                                nonce: nonce)
     
     let signableParts = "\(header).\(body)"
-    var signature = "SIGNATURE"
+    var signaturePart = "SIGNATURE"
     
-    if let algorithm = JWTAlgorithm(rawValue: alg) {
-        signature = algorithm.sign(value: signableParts.data(using: .utf8)!).a0_encodeBase64URLSafe()!
+    if let signature = signature {
+        signaturePart = signature
+    }
+    else if let algorithm = JWTAlgorithm(rawValue: alg) {
+        signaturePart = algorithm.sign(value: signableParts.data(using: .utf8)!).a0_encodeBase64URLSafe()!
     }
     
-    return try! decode(jwt: "\(signableParts).\(signature)")
+    return try! decode(jwt: "\(signableParts).\(signaturePart)")
 }
 
 // MARK: - JWK

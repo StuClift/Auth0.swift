@@ -28,17 +28,16 @@ enum JWTAlgorithm: String {
     case hs256 = "HS256"
     
     func verify(_ jwt: JWT, using jwk: JWK) -> Bool {
+        let separator = "."
+        let parts = jwt.string.components(separatedBy: separator).dropLast().joined(separator: separator)
+        guard let data = parts.data(using: .utf8),
+            let signature = jwt.signature?.a0_decodeBase64URLSafe(),
+            !signature.isEmpty else { return false }
         switch self {
         case .rs256:
-            let separator = "."
-            let parts = jwt.string.components(separatedBy: separator).dropLast().joined(separator: separator)
-            guard let data = parts.data(using: .utf8),
-                let signature = jwt.signature?.a0_decodeBase64URLSafe(),
-                let publicKey = jwk.rsaPublicKey,
+            guard let publicKey = jwk.rsaPublicKey,
                 let sha256 = A0SHA(algorithm: "sha256"),
-                let rsa = A0RSA(key: publicKey) else {
-                    return false
-            }
+                let rsa = A0RSA(key: publicKey) else { return false }
             return rsa.verify(sha256.hash(data), signature: signature)
         case .hs256: return true // This will jump straight to the claims validation
         }

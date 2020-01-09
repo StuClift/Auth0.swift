@@ -140,7 +140,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                     }
                     
                     waitUntil { done in
-                        validate(idToken: "a.b.",
+                        validate(idToken: "a.b.", // alg == none, not supported by us
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in

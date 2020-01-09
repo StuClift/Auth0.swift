@@ -181,7 +181,6 @@ final class IDTokenExpValidator: JWTClaimValidator {
         let expEpoch = exp.timeIntervalSince1970 + Double(leeway)
         guard expEpoch > currentTimeEpoch else {
             return ValidationError.pastExp(currentTime: currentTimeEpoch, expirationTime: expEpoch)
-
         }
         return nil
     }
@@ -242,7 +241,6 @@ final class IDTokenNonceValidator: JWTClaimValidator {
         guard let nonceClaim = jwt.claim(name: "nonce").string else { return ValidationError.missingNonce }
         guard nonceClaim == nonce else {
             return ValidationError.mismatchedNonce(actual: nonceClaim, expected: nonce)
-
         }
         return nil
     }
