@@ -51,14 +51,6 @@ class MockUnsuccessfulIDTokenClaimValidator: JWTClaimValidator {
         var errorDescription: String? {
             return "Error message"
         }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.errorCase1, .errorCase1): return true
-            case (.errorCase2, .errorCase2): return true
-            default: return false
-            }
-        }
     }
     
     let errorCase: ValidationError

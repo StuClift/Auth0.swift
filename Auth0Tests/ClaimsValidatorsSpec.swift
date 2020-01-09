@@ -65,7 +65,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let claimsValidator = IDTokenClaimsValidator(validators: claimsValidators)
                     let expectedError = MockUnsuccessfulIDTokenClaimValidator.ValidationError.errorCase2
                     
-                    expect((claimsValidator.validate(jwt) as! MockUnsuccessfulIDTokenClaimValidator.ValidationError)).to(equal(expectedError))
+                    expect(claimsValidator.validate(jwt)).to(matchError(expectedError))
                 }
                 
                 it("should not execute further validations past the one that failed") {
@@ -105,8 +105,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(iss: nil)
                     let expectedError = IDTokenIssValidator.ValidationError.missingIss
                     
-                    // TODO: Create a custom matcher
-                    expect((issValidator.validate(jwt) as! IDTokenIssValidator.ValidationError)).to(equal(expectedError))
+                    expect(issValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
             
@@ -121,7 +120,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(iss: "https://samples.auth0.com")
                     let expectedError = IDTokenIssValidator.ValidationError.mismatchedIss(actual: "", expected: "")
                     
-                    expect((issValidator.validate(jwt) as! IDTokenIssValidator.ValidationError)).to(equal(expectedError))
+                    expect(issValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
         }
@@ -170,7 +169,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(aud: nil)
                     let expectedError = IDTokenAudValidator.ValidationError.missingAud
                     
-                    expect((audValidator.validate(jwt) as! IDTokenAudValidator.ValidationError)).to(equal(expectedError))
+                    expect(audValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
             
@@ -185,7 +184,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(aud: ["https://example.com"])
                     let expectedError = IDTokenAudValidator.ValidationError.mismatchedAudString(actual: "", expected: "")
                     
-                    expect((audValidator.validate(jwt) as! IDTokenAudValidator.ValidationError)).to(equal(expectedError))
+                    expect(audValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
             
@@ -200,7 +199,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(aud: ["https://example.com", "https://example.net", "https://example.org"])
                     let expectedError = IDTokenAudValidator.ValidationError.mismatchedAudArray(actual: "", expected: "")
                     
-                    expect((audValidator.validate(jwt) as! IDTokenAudValidator.ValidationError)).to(equal(expectedError))
+                    expect(audValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
         }
@@ -225,7 +224,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(exp: nil)
                     let expectedError = IDTokenExpValidator.ValidationError.missingExp
                     
-                    expect((expValidator.validate(jwt) as! IDTokenExpValidator.ValidationError)).to(equal(expectedError))
+                    expect(expValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
             
@@ -240,7 +239,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(exp: Date().addingTimeInterval(-100 - Double(leeway)))
                     let expectedError = IDTokenExpValidator.ValidationError.pastExp(currentTime: 0, expirationTime: 0)
                     
-                    expect((expValidator.validate(jwt) as! IDTokenExpValidator.ValidationError)).to(equal(expectedError))
+                    expect(expValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
         }
@@ -264,7 +263,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(iat: nil)
                     let expectedError = IDTokenIatValidator.ValidationError.missingIat
                     
-                    expect((iatValidator.validate(jwt) as! IDTokenIatValidator.ValidationError)).to(equal(expectedError))
+                    expect(iatValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
         }
@@ -289,7 +288,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(nonce: nil)
                     let expectedError = IDTokenNonceValidator.ValidationError.missingNonce
                     
-                    expect((nonceValidator.validate(jwt) as! IDTokenNonceValidator.ValidationError)).to(equal(expectedError))
+                    expect(nonceValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
             
@@ -304,7 +303,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(nonce: "abc123")
                     let expectedError = IDTokenNonceValidator.ValidationError.mismatchedNonce(actual: "", expected: "")
                     
-                    expect((nonceValidator.validate(jwt) as! IDTokenNonceValidator.ValidationError)).to(equal(expectedError))
+                    expect(nonceValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
         }
@@ -329,7 +328,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(aud: nil)
                     let expectedError = IDTokenAzpValidator.ValidationError.missingAzp
                     
-                    expect((azpValidator.validate(jwt) as! IDTokenAzpValidator.ValidationError)).to(equal(expectedError))
+                    expect(azpValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
             
@@ -344,7 +343,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(aud: ["https://example.com", "https://example.net", "https://example.org"], azp: "abc123")
                     let expectedError = IDTokenAzpValidator.ValidationError.mismatchedAzp(actual: "", expected: "")
                     
-                    expect((azpValidator.validate(jwt) as! IDTokenAzpValidator.ValidationError)).to(equal(expectedError))
+                    expect(azpValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
         }
@@ -370,7 +369,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(maxAge: maxAge, authTime: nil)
                     let expectedError = IDTokenAuthTimeValidator.ValidationError.missingAuthTime
                     
-                    expect((authTimeValidator.validate(jwt) as! IDTokenAuthTimeValidator.ValidationError)).to(equal(expectedError))
+                    expect(authTimeValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
             
@@ -385,7 +384,7 @@ class ClaimsValidatorsSpec: IDTokenValidatorBaseSpec {
                     let jwt = generateJWT(maxAge: maxAge, authTime: Date().addingTimeInterval(100 + Double(leeway) + Double(maxAge)))
                     let expectedError = IDTokenAuthTimeValidator.ValidationError.pastLastAuth(currentTime: 0, lastAuthTime: 0)
                     
-                    expect((authTimeValidator.validate(jwt) as! IDTokenAuthTimeValidator.ValidationError)).to(equal(expectedError))
+                    expect(authTimeValidator.validate(jwt)).to(matchError(expectedError))
                 }
             }
         }

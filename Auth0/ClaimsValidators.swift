@@ -44,7 +44,7 @@ final class IDTokenClaimsValidator: JWTClaimValidator {
 }
 
 final class IDTokenIssValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingIss
         case mismatchedIss(actual: String, expected: String)
         
@@ -53,14 +53,6 @@ final class IDTokenIssValidator: JWTClaimValidator {
             case .missingIss: return "Issuer (iss) claim must be a string present in the ID token"
             case .mismatchedIss(let actual, let expected):
                 return "Issuer (iss) claim mismatch in the ID token, expected (\(expected)), found (\(actual))"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingIss, .missingIss): return true
-            case (.mismatchedIss, .mismatchedIss): return true
-            default: return false
             }
         }
     }
@@ -81,18 +73,12 @@ final class IDTokenIssValidator: JWTClaimValidator {
 }
 
 final class IDTokenSubValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingSub
         
         var errorDescription: String? {
             switch self {
             case .missingSub: return "Subject (sub) claim must be a string present in the ID token"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingSub, .missingSub): return true
             }
         }
     }
@@ -104,7 +90,7 @@ final class IDTokenSubValidator: JWTClaimValidator {
 }
 
 final class IDTokenAudValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingAud
         case mismatchedAudString(actual: String, expected: String)
         case mismatchedAudArray(actual: String, expected: String)
@@ -117,15 +103,6 @@ final class IDTokenAudValidator: JWTClaimValidator {
                 return "Audience (aud) claim mismatch in the ID token; expected (\(expected)) but found (\(actual))"
             case .mismatchedAudArray(let actual, let expected):
                 return "Audience (aud) claim mismatch in the ID token; expected (\(expected)) but was not one of (\(actual))"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingAud, .missingAud): return true
-            case (.mismatchedAudString, .mismatchedAudString): return true
-            case (.mismatchedAudArray, .mismatchedAudArray): return true
-            default: return false
             }
         }
     }
@@ -148,7 +125,7 @@ final class IDTokenAudValidator: JWTClaimValidator {
 }
 
 final class IDTokenExpValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingExp
         case pastExp(currentTime: Double, expirationTime: Double)
         
@@ -157,14 +134,6 @@ final class IDTokenExpValidator: JWTClaimValidator {
             case .missingExp: return "Expiration time (exp) claim must be a number present in the ID token"
             case .pastExp(let currentTime, let expirationTime):
                 return "Expiration time (exp) claim error in the ID token; current time (\(currentTime)) is after expiration time (\(expirationTime))"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingExp, .missingExp): return true
-            case (.pastExp, .pastExp): return true
-            default: return false
             }
         }
     }
@@ -187,18 +156,12 @@ final class IDTokenExpValidator: JWTClaimValidator {
 }
 
 final class IDTokenIatValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingIat
         
         var errorDescription: String? {
             switch self {
             case .missingIat: return "Issued At (iat) claim must be a number present in the ID token"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingIat, .missingIat): return true
             }
         }
     }
@@ -210,7 +173,7 @@ final class IDTokenIatValidator: JWTClaimValidator {
 }
 
 final class IDTokenNonceValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingNonce
         case mismatchedNonce(actual: String, expected: String)
         
@@ -219,14 +182,6 @@ final class IDTokenNonceValidator: JWTClaimValidator {
             case .missingNonce: return "Nonce (nonce) claim must be a string present in the ID token"
             case .mismatchedNonce(let actual, let expected):
                 return "Nonce (nonce) claim value mismatch in the ID token; expected (\(expected)), found (\(actual))"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingNonce, .missingNonce): return true
-            case (.mismatchedNonce, .mismatchedNonce): return true
-            default: return false
             }
         }
     }
@@ -247,7 +202,7 @@ final class IDTokenNonceValidator: JWTClaimValidator {
 }
 
 final class IDTokenAzpValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingAzp
         case mismatchedAzp(actual: String, expected: String)
         
@@ -257,14 +212,6 @@ final class IDTokenAzpValidator: JWTClaimValidator {
                 return "Authorized Party (azp) claim must be a string present in the ID token when Audience (aud) claim has multiple values"
             case .mismatchedAzp(let actual, let expected):
                 return "Authorized Party (azp) claim mismatch in the ID token; expected (\(expected)), found (\(actual))"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingAzp, .missingAzp): return true
-            case (.mismatchedAzp, .mismatchedAzp): return true
-            default: return false
             }
         }
     }
@@ -285,7 +232,7 @@ final class IDTokenAzpValidator: JWTClaimValidator {
 }
 
 final class IDTokenAuthTimeValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case missingAuthTime
         case pastLastAuth(currentTime: Double, lastAuthTime: Double)
         
@@ -295,14 +242,6 @@ final class IDTokenAuthTimeValidator: JWTClaimValidator {
                 return "Authentication Time (auth_time) claim must be a number present in the ID token when Max Age (max_age) is specified"
             case .pastLastAuth(let currentTime, let lastAuthTime):
                 return "Authentication Time (auth_time) claim in the ID token indicates that too much time has passed since the last end-user authentication. Current time (\(currentTime)) is after last auth time (\(lastAuthTime))"
-            }
-        }
-        
-        static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.missingAuthTime, .missingAuthTime): return true
-            case (.pastLastAuth, .pastLastAuth): return true
-            default: return false
             }
         }
     }

@@ -54,7 +54,7 @@ final class IDTokenValidator {
     }
 }
 
-enum IDTokenDecodingError: LocalizedError, Equatable {
+enum IDTokenDecodingError: LocalizedError {
     case missingToken
     case cannotDecode
     
@@ -62,14 +62,6 @@ enum IDTokenDecodingError: LocalizedError, Equatable {
         switch self {
         case .missingToken: return "ID token is required but missing"
         case .cannotDecode: return "ID token could not be decoded"
-        }
-    }
-    
-    public static func == (lhs: IDTokenDecodingError, rhs: IDTokenDecodingError) -> Bool {
-        switch (lhs, rhs) {
-        case (.missingToken, .missingToken): return true
-        case (.cannotDecode, .cannotDecode): return true
-        default: return false
         }
     }
 }

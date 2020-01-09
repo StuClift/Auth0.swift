@@ -58,7 +58,7 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
                         signatureValidator.validate(jwt) { error in
                             let expectedError = IDTokenSignatureValidator.ValidationError.invalidAlgorithm(actual: "", expected: "")
                             
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }
@@ -74,7 +74,7 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
                     
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }
@@ -85,7 +85,7 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
                     
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }
@@ -96,7 +96,7 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
                     
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
-                            expect(error as? IDTokenSignatureValidator.ValidationError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }

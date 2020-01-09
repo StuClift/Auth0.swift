@@ -107,7 +107,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                              context: validatorContext,
                              signatureValidator: mockSignatureValidator,
                              claimsValidator: mockClaimsValidator) { error in
-                        expect(error as? IDTokenDecodingError).to(equal(IDTokenDecodingError.missingToken))
+                        expect(error).to(matchError(IDTokenDecodingError.missingToken))
                         done()
                     }
                 }
@@ -122,7 +122,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }
@@ -134,7 +134,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }
@@ -144,7 +144,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }
@@ -156,7 +156,7 @@ class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
                                  context: validatorContext,
                                  signatureValidator: mockSignatureValidator,
                                  claimsValidator: mockClaimsValidator) { error in
-                            expect(error as? IDTokenDecodingError).to(equal(expectedError))
+                            expect(error).to(matchError(expectedError))
                             done()
                         }
                     }

@@ -30,7 +30,7 @@ protocol IDTokenSignatureValidatorContext {
 }
 
 final class IDTokenSignatureValidator: JWTSignatureValidator {
-    enum ValidationError: LocalizedError, Equatable {
+    enum ValidationError: LocalizedError {
         case invalidAlgorithm(actual: String, expected: String)
         case missingPublicKey(kid: String)
         case invalidSignature
@@ -40,15 +40,6 @@ final class IDTokenSignatureValidator: JWTSignatureValidator {
             case .invalidAlgorithm(let actual, let expected): return "Signature algorithm of \"\(actual)\" is not supported. Expected the ID token to be signed with \"\(expected)\""
             case .missingPublicKey(let kid): return "Could not find a public key for Key ID (kid) \"\(kid)\""
             case .invalidSignature: return "Invalid ID token signature"
-            }
-        }
-        
-        public static func == (lhs: ValidationError, rhs: ValidationError) -> Bool {
-            switch (lhs, rhs) {
-            case (.invalidAlgorithm, .invalidAlgorithm): return true
-            case (.missingPublicKey, .missingPublicKey): return true
-            case (.invalidSignature, .invalidSignature): return true
-            default: return false
             }
         }
     }
