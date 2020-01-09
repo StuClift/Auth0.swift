@@ -40,8 +40,8 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
                     stub(condition: isJWKSPath(domain)) { _ in jwksResponse() }
                 }
                 
-                it("should support RSA256") {
-                    let jwt = generateJWT()
+                it("should support RS256") {
+                    let jwt = generateJWT(alg: "RS256")
                     
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in
@@ -52,7 +52,7 @@ class IDTokenSignatureValidatorSpec: IDTokenValidatorBaseSpec {
                 }
 
                 it("should not support other algorithms") {
-                    let jwt = generateJWT(alg: "UNSUPPORTED")
+                    let jwt = generateJWT(alg: "AES256")
                                         
                     waitUntil { done in
                         signatureValidator.validate(jwt) { error in

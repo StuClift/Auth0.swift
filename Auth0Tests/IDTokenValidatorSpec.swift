@@ -44,56 +44,6 @@ class IDTokenValidatorBaseSpec: QuickSpec {
 }
 
 class IDTokenValidatorSpec: IDTokenValidatorBaseSpec {
-    
-    // Unit test cases
-    //
-    // Sanity checks test cases:
-    /// ID Token is present
-    /// ID Token is NOT present -> fail
-    /// ID Token can be decoded
-    /// ID Token can't be decoded -> fail
-    //
-    // Signature verification test cases:
-    /// alg is supported --> IDTokenSignatureValidator
-    /// alg is NOT supported -> fail
-    /// Signature can be verified and is correct --> JWTAlgorithm.verify
-    /// Signature can be verified and is NOT correct -> fail
-    // Signature can't be verified and ID Token was received on a code-exchange request -> skip signature check --> Integration test
-    // Signature can't be verified and ID Token was NOT received on a code-exchange request  -> skip remaining checks --> Integration test
-    //
-    // Claims validation test cases:
-    // iss is present
-    // iss is NOT present -> fail
-    // iss matches the domain
-    // iss does NOT match the domain -> fail
-    // sub is present
-    // sub is NOT present -> fail
-    // sub is NOT empty
-    // sub is empty -> fail
-    // aud is present
-    // aud is NOT present -> fail
-    // aud matches the Client ID
-    // aud does NOT match the Client ID -> fail
-    // aud contains the Client ID
-    // aud does NOT contain the Client ID -> fail
-    // exp is present
-    // exp is NOT present -> fail
-    // exp is a date in the future
-    // exp is NOT a date in the future -> fail
-    // iat is present
-    // iat is NOT present -> fail
-    // nonce is present
-    // nonce is NOT present -> fail
-    // nonce matches the one in the request
-    // nonce does NOT match the one in the request -> fail
-    // aud is an array with 1+ element and azp is present
-    // aud is an array with 1+ element and azp is NOT present -> fail
-    // aud is an array with 1+ element and azp matches the Client ID
-    // aud is an array with 1+ element and azp does NOT match the Client ID -> fail
-    // max_age was included in the request and auth_time is present
-    // max_age was included in the request and auth_time is NOT present -> fail
-    // max_age was included in the request and (auth_time + max_age + leeway) is a date in the future
-    // max_age was included in the request and (auth_time + max_age + leeway) is NOT a date in the future -> fail
 
     override func spec() {
         let validatorContext = self.validatorContext

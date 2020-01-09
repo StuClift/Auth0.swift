@@ -36,7 +36,7 @@ class JWKSpec: QuickSpec {
             let jwk = generateRSAJWK(from: TestKeys.rsaPublic)
             
             context("successful generation") {
-                it("should generate a rsa public key") {
+                it("should generate a RSA public key") {
                     let publicKey = jwk.rsaPublicKey!
                     let keyAttributes = SecKeyCopyAttributes(publicKey) as! [String: Any]
                     

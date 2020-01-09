@@ -63,7 +63,7 @@ class JWTAlgorithmSpec: QuickSpec {
                     expect(JWTAlgorithm.hs256.verify(jwt, using: jwk)).to(beTrue())
                 }
                 
-                it("should return false with an empty HS256 signature") {
+                it("should return false with an empty signature") {
                     let jwt = generateJWT(alg: alg, signature: "")
                     
                     expect(JWTAlgorithm.hs256.verify(jwt, using: jwk)).to(beFalse())

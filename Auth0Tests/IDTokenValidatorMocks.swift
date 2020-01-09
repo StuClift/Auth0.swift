@@ -64,20 +64,12 @@ class MockUnsuccessfulIDTokenClaimValidator: JWTClaimValidator {
     }
 }
 
-class SpyUnsuccessfulIDTokenClaimValidator: JWTClaimValidator {
-    enum ValidationError: LocalizedError {
-        case errorCase
-        
-        var errorDescription: String? {
-            return "Error message"
-        }
-    }
-    
+class SpyUnsuccessfulIDTokenClaimValidator: MockUnsuccessfulIDTokenClaimValidator {
     var didExecuteValidation: Bool = false
     
-    func validate(_ jwt: JWT) -> LocalizedError? {
+    override func validate(_ jwt: JWT) -> LocalizedError? {
         didExecuteValidation = true
         
-        return ValidationError.errorCase
+        return super.validate(jwt)
     }
 }
