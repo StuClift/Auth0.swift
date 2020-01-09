@@ -265,6 +265,15 @@ func haveObjectWithAttributes(_ attributes: [String]) -> Predicate<Result<[Strin
     }
 }
 
+func haveJWKS() -> Predicate<Result<JWKS>> {
+    return Predicate<Result<JWKS>>.define("have a JWKS object with at least one key") { expression, failureMessage -> PredicateResult in
+        if let actual = try expression.evaluate(), case .success(let jwks) = actual {
+            return PredicateResult(bool: !jwks.keys.isEmpty, message: failureMessage)
+        }
+        return PredicateResult(status: .doesNotMatch, message: failureMessage)
+    }
+}
+
 func beURLSafeBase64() -> Predicate<String> {
     return Predicate<String>.define("be url safe base64") { expression, failureMessage -> PredicateResult in
         var set = CharacterSet()
