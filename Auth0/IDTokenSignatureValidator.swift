@@ -90,8 +90,7 @@ final class IDTokenSignatureValidator: JWTSignatureValidator {
                 switch result {
                 case .success(let jwks):
                     guard let jwk = jwks.key(id: kid) else {
-                        callback(ValidationError.missingPublicKey(kid: kid))
-                        return
+                        return callback(ValidationError.missingPublicKey(kid: kid))
                     }
                     algorithm.verify(jwt, using: jwk) ? callback(nil) : callback(ValidationError.invalidSignature)
                 case .failure: callback(ValidationError.missingPublicKey(kid: kid))

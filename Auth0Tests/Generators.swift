@@ -149,7 +149,7 @@ private func extractData(from bytes: UnsafePointer<UInt8>) -> (UnsafePointer<UIn
     return (pointer, data)
 }
 
-func generateRSAJWK(from publicKey: SecKey = TestKeys.rsaPublic) -> JWK {
+func generateRSAJWK(from publicKey: SecKey = TestKeys.rsaPublic, keyId: String = "key123") -> JWK {
     let asn = { (bytes: UnsafePointer<UInt8>) -> JWK? in
         guard bytes.pointee == 0x30 else { return nil }
         
@@ -163,7 +163,7 @@ func generateRSAJWK(from publicKey: SecKey = TestKeys.rsaPublic) -> JWK {
         let encodedExponent = exponent.a0_encodeBase64URLSafe()
         
         return JWK(keyType: "RSA",
-                   keyId: "key123",
+                   keyId: keyId,
                    usage: "sig",
                    algorithm: JWTAlgorithm.rs256.rawValue,
                    certUrl: nil,
